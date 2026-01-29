@@ -1,4 +1,5 @@
 import streamlit as st
+import urllib.parse
 from datetime import datetime, timedelta
 from funnel_manager import FunnelStage
 
@@ -151,7 +152,8 @@ def render_unified_card_content(rider, dashboard, key_suffix="", default_event_n
         if links:
             st.markdown(f"**Socials:** {' | '.join(links)}")
         else:
-            search_url = f"https://www.google.com/search?q={rider.full_name}+motorcycle+racing"
+            query = f"{rider.full_name} motorcycle racing"
+            search_url = f"https://www.google.com/search?q={urllib.parse.quote(query)}"
             st.markdown(f"[🔎 Search Google]({search_url})")
             
         st.divider()

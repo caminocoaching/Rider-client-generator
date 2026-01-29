@@ -1145,7 +1145,7 @@ class DataLoader:
                 
         return count
 
-    def add_new_rider_to_db(self, email: str, first_name: str, last_name: str, fb_url: str, ig_url: str = "", championship: str = "") -> bool:
+    def add_new_rider_to_db(self, email: str, first_name: str, last_name: str, fb_url: str, ig_url: str = "", championship: str = "", **kwargs) -> bool:
         """Manually add a new rider to Rider Database.csv"""
         filename = "Rider Database.csv"
         filepath = os.path.join(self.data_dir, filename)
@@ -1173,11 +1173,30 @@ class DataLoader:
                     'Facebook URL': fb_url,
                     'Instagram URL': ig_url,
                     'Championship': championship,
-                    'Phone Number': '',
+                    'Phone Number': kwargs.get('phone', ''),
                     'Status': 'Contact',
                     'Date Joined': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                    'Notes': 'Added via App'
+                    'Notes': kwargs.get('notes', 'Added via App')
                 })
+            
+            # --- AIRTABLE SYNC (CLOUD NATIVE) ---
+            if self.airtable:
+                try:
+                    at_data = {
+                        "Email": email,
+                        "First Name": first_name,
+                        "Last Name": last_name,
+                        "Facebook URL": fb_url,
+                        "Instagram URL": ig_url,
+                        "Championship": championship,
+                        "Phone Number": kwargs.get('phone', ''),
+                        "Notes": kwargs.get('notes', ''),
+                    }
+                    if 'follow_up_date' in kwargs and kwargs['follow_up_date']:
+                        at_data['Follow Up Date'] = kwargs['follow_up_date'].strftime('%Y-%m-%d')
+                        
+                    self.airtable.upsert_rider(at_data)
+                except Exception: pass
                 
             # CRITICAL: Also update overrides if they exist (GSheet Mode)
             # because reload_data() prefers overrides over the file we just wrote.
