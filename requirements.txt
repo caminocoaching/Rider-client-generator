@@ -1,7 +1,6 @@
 streamlit
 pandas
 plotly
-watchdog
 st-gsheets-connection
 streamlit-sortables
 pyairtable
