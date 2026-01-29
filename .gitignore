@@ -1,0 +1,17 @@
+
+# Valid Secrets
+.streamlit/secrets.toml
+.env
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Mac
+.DS_Store
+
+# Large or System Specific
+*.mp4
+*.mov
