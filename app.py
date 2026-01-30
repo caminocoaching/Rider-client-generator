@@ -419,11 +419,14 @@ def render_dashboard(dashboard, daily_metrics, riders):
         return False
 
     # 1. Pipeline Stages Definition
+    # 1. Pipeline Stages Definition
     STAGES = [
-        {"label": "Leads / Contact", "val": [FunnelStage.CONTACT], "date_attr": 'outreach_date'},
-        {"label": "Messaged", "val": [FunnelStage.MESSAGED, FunnelStage.LINK_SENT, FunnelStage.RACE_WEEKEND], "date_attr": 'outreach_date'},
-
-        {"label": "Registered", "val": [FunnelStage.BLUEPRINT_STARTED], "date_attr": 'registered_date'},
+        # REMOVED: "Leads/Contact" as per user request (it's in Database)
+        
+        {"label": "Messaged", "val": [FunnelStage.MESSAGED, FunnelStage.RACE_WEEKEND], "date_attr": 'outreach_date'},
+        {"label": "Link Sent", "val": [FunnelStage.LINK_SENT, FunnelStage.BLUEPRINT_LINK_SENT], "date_attr": 'outreach_date'}, # or create link_sent_date if exists, fallback to outreach
+        
+        {"label": "Registered", "val": [FunnelStage.BLUEPRINT_STARTED, FunnelStage.REGISTERED], "date_attr": 'registered_date'},
         {"label": "Day 1", "val": [FunnelStage.DAY1_COMPLETE], "date_attr": 'day1_complete_date'},
         {"label": "Day 2", "val": [FunnelStage.DAY2_COMPLETE], "date_attr": 'day2_complete_date'},
         {"label": "Call Booked", "val": [FunnelStage.STRATEGY_CALL_BOOKED], "date_attr": 'strategy_call_booked_date'},
