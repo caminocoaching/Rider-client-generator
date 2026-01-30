@@ -194,6 +194,13 @@ def render_unified_card_content(rider, dashboard, key_suffix="", default_event_n
             search_url = f"https://www.google.com/search?q={urllib.parse.quote(query)}"
             st.markdown(f"[🔎 Search Google]({search_url})")
             
+        # STAGE ACTIONS (Link Sent)
+        if rider.current_stage.value != 'Link Sent' and rider.current_stage.value != 'Podium Contenders Blueprint Started':
+             if st.button("🔗 Mark Link Sent", key=f"mark_link_{rider.email}_{key_suffix}", help="Move to 'Link Sent' stage"):
+                 dashboard.update_rider_stage(rider.email, FunnelStage.LINK_SENT)
+                 st.toast(f"Updated {rider.first_name} to Link Sent!")
+                 st.rerun()
+            
         st.divider()
         
         # QUICK ACTIONS: Follow Up
