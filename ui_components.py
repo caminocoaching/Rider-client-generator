@@ -236,7 +236,12 @@ def render_unified_card_content(rider, dashboard, key_suffix="", default_event_n
                 with c_name2:
                     u_last = st.text_input("Last Name", value=rider.last_name, key=f"uni_last_{rider.email}_{key_suffix}")
                 
-                u_email = st.text_input("Email", value=rider.email, key=f"uni_email_{rider.email}_{key_suffix}")
+                # UX FIX: Hide "no_email_" slugs from the user. Treat them as empty.
+                display_email = rider.email
+                if display_email.startswith("no_email_"):
+                    display_email = ""
+                
+                u_email = st.text_input("Email (Optional)", value=display_email, key=f"uni_email_{rider.email}_{key_suffix}", placeholder="e.g. rider@example.com")
                 
                 u_fb = st.text_input("Facebook URL", value=rider.facebook_url or "", key=f"uni_fb_{rider.email}_{key_suffix}")
                 u_ig = st.text_input("Instagram URL", value=rider.instagram_url or "", key=f"uni_ig_{rider.email}_{key_suffix}")
@@ -257,9 +262,14 @@ def render_unified_card_content(rider, dashboard, key_suffix="", default_event_n
                 if st.form_submit_button("💾 Save Updates (Sync & Migrate)"):
                     ts_follow = datetime.combine(u_follow, datetime.min.time()) if u_follow else None
                     
-                    # Use u_email (in case they updated it from the slug)
+                    # LOGIC: If user left email blank, keep the old ID (even if it was a slug)
+                    # If user entered a NEW email, use that (this will technically create a new migrated entry)
+                    final_email = u_email.strip()
+                    if not final_email:
+                        final_email = rider.email
+                    
                     dashboard.add_new_rider(
-                        u_email, u_first, u_last, u_fb, ig_url=u_ig, championship=u_champ, notes=u_notes, follow_up_date=ts_follow
+                        final_email, u_first, u_last, u_fb, ig_url=u_ig, championship=u_champ, notes=u_notes, follow_up_date=ts_follow
                     )
                     st.toast(f"Updated & Synced {u_first}!")
                     st.rerun()

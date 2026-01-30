@@ -929,7 +929,10 @@ def render_race_outreach(dashboard):
                                     
                                 in_first = st.text_input("First Name", value=f_geo, key=f"first_{i}_{r['original_name']}")
                                 in_last = st.text_input("Last Name", value=l_geo, key=f"last_{i}_{r['original_name']}")
-                                in_email = st.text_input("Email (Required - make one up if needed)", value=f"no_email_{f_geo}_{l_geo}".lower(), key=f"email_{i}_{r['original_name']}")
+                                
+                                # UX FIX: Email Optional (Hidden ID generation)
+                                in_email = st.text_input("Email (Optional)", key=f"email_{i}_{r['original_name']}", placeholder="e.g. rider@example.com")
+                                
                                 in_champ = st.text_input("Championship", key=f"champ_{i}_{r['original_name']}")
                                 
                                 # Pre-fill FB/IG (Manual now, so empty defaults)
@@ -937,12 +940,20 @@ def render_race_outreach(dashboard):
                                 in_ig = st.text_input("Instagram URL", key=f"ig_{i}_{r['original_name']}")
                                 
                                 if st.form_submit_button("💾 Save to DB"):
-                                    # 1. Add to DB
-                                    success = dashboard.add_new_rider(in_email, in_first, in_last, in_fb, ig_url=in_ig, championship=in_champ)
+                                    # 1. Handle ID Generation
+                                    final_email = in_email.strip()
+                                    if not final_email:
+                                        # Generate ID from name
+                                        slug = f"{in_first} {in_last}".lower().strip().replace(' ', '_')
+                                        slug = "".join([c for c in slug if c.isalnum() or c == '_'])
+                                        final_email = f"no_email_{slug}"
+                                    
+                                    # 2. Add to DB
+                                    success = dashboard.add_new_rider(final_email, in_first, in_last, in_fb, ig_url=in_ig, championship=in_champ)
                                     
                                     if success:
-                                        # 2. Update Stage to CONTACT (Not Messaged yet, user must click Confirm Sent)
-                                        dashboard.update_rider_stage(in_email, FunnelStage.CONTACT)
+                                        # 3. Update Stage to CONTACT
+                                        dashboard.update_rider_stage(final_email, FunnelStage.CONTACT)
                                         
                                         # 3. Update Session State
                                         if in_email in dashboard.riders:
