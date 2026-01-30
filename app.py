@@ -895,12 +895,16 @@ def render_race_outreach(dashboard):
                             c_d1, c_d2 = st.columns(2)
                             with c_d1:
                                 st.markdown(f"**Facebook**")
-                                st.markdown(f"[👥 Open Search (Auto)]({deep_links['👥 Facebook Direct']})")
+                                fb_link = deep_links.get('👥 Facebook Direct', deep_links.get('👥 Facebook Profile', '#'))
+                                st.markdown(f"[👥 Open Search (Auto)]({fb_link})")
                                 
                             with c_d2:
                                 st.markdown(f"**Instagram**")
-                                st.markdown(f"[📷 Open Instagram]({deep_links['📸 Instagram Direct']})")
-                                st.caption(f"[Alternative: Google Search]({deep_links['(Backup) IG Google']})")
+                                ig_link = deep_links.get('📸 Instagram Direct', deep_links.get('📸 Instagram Profile', '#'))
+                                st.markdown(f"[📷 Open Instagram]({ig_link})")
+                                
+                                backup_link = deep_links.get('(Backup) IG Google', '#')
+                                st.caption(f"[Alternative: Google Search]({backup_link})")
 
                             st.caption("Validation Tools")
                             c_v1, c_v2 = st.columns(2)
