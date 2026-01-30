@@ -833,71 +833,40 @@ def render_race_outreach(dashboard):
                         if r['match_status'] == 'new_prospect':
                             # DEEP SEARCH FUNCTIONALITY
                             st.info("Rider not in database.")
+
+                            # Always show Deep Search Toolkit (No buttons, no expander)
+                            st.markdown("---")
+                            st.markdown("#### 🕵️ Deep Search Toolkit")
+                            st.caption("Use these links to find their profile URL.")
                             
-                            # Use a unique key for state
-                            search_key = f"search_done_{i}_{r['original_name']}"
-                            manual_key = f"manual_add_{i}"
+                            deep_links = dashboard.race_manager.social_finder.generate_deep_search_links(r['original_name'], event_name)
                             
-                            c_search, c_manual = st.columns(2)
-                            
-                            if c_search.button(f"🔍 Find Socials", key=f"btn_search_{i}"):
-                                with st.spinner("Searching web..."):
-                                    socials = dashboard.race_manager.find_socials_for_prospect(r['original_name'], event_name)
-                                    st.session_state[search_key] = socials
-                            
-                            if c_manual.button("➕ Add Manually", key=f"btn_man_{i}"):
-                                 st.session_state[manual_key] = True
-                            
-                            # Determine if we show the form
-                            show_form = False
-                            found_socials = {}
-                            
-                            if search_key in st.session_state:
-                                found_socials = st.session_state[search_key]
-                                if found_socials:
-                                    st.success("Found Profiles!")
-                                else:
-                                    st.warning("No profiles found.")
-                                show_form = True
-                            
-                            if st.session_state.get(manual_key):
-                                show_form = True
+                            c_d1, c_d2 = st.columns(2)
+                            with c_d1:
+                                st.markdown(f"**Discovery**")
+                                st.markdown(f"[🔍 Core Search]({deep_links['🔍 Core Discovery']})")
+                                if '🏁 Event check' in deep_links:
+                                    st.markdown(f"[🏁 Matches Event?]({deep_links['🏁 Event check']})")
+                            with c_d2:
+                                st.markdown(f"**Platforms**")
+                                st.markdown(f"[📷 Instagram]({deep_links['📸 Instagram Profile']})")
+                                st.markdown(f"[👥 Facebook]({deep_links['👥 Facebook Profile']})")
+                                
+                            st.caption("Validation")
+                            c_v1, c_v2 = st.columns(2)
+                            if '📋 Racing Org Check' in deep_links:
+                                with c_v1: st.markdown(f"[📋 Org Check]({deep_links['📋 Racing Org Check']})")
+                            if '⏱️ Lap Times' in deep_links:
+                                with c_v2: st.markdown(f"[⏱️ Lap Times]({deep_links['⏱️ Lap Times']})")
     
-                            # Show results display (links) separate from form
-                            if found_socials:
-                                fb_val = found_socials.get('facebook_url', '')
-                                ig_val = found_socials.get('instagram_url', '')
-                                if fb_val: st.markdown(f"**Facebook**: [{fb_val}]({fb_val})")
-                                if ig_val: st.markdown(f"**Instagram**: [{ig_val}]({ig_val})")
-                            else:
-                                # Show Deep Search Toolkit
-                                st.markdown("---")
-                                with st.expander("🕵️ Deep Search Toolkit", expanded=False):
-                                    deep_links = dashboard.race_manager.social_finder.generate_deep_search_links(r['original_name'], event_name)
-                                    
-                                    c_d1, c_d2 = st.columns(2)
-                                    with c_d1:
-                                        st.markdown(f"**Discovery**")
-                                        st.markdown(f"[🔍 Core Search]({deep_links['🔍 Core Discovery']})")
-                                        st.markdown(f"[🏁 Matches Event?]({deep_links.get('🏁 Event check', '#')})")
-                                    with c_d2:
-                                        st.markdown(f"**Platforms**")
-                                        st.markdown(f"[📷 Instagram]({deep_links['📸 Instagram Profile']})")
-                                        st.markdown(f"[👥 Facebook]({deep_links['👥 Facebook Profile']})")
-                                        
-                                    st.caption("Validation")
-                                    c_v1, c_v2 = st.columns(2)
-                                    with c_v1: st.markdown(f"[📋 Org Check]({deep_links['📋 Racing Org Check']})")
-                                    with c_v2: st.markdown(f"[⏱️ Lap Times]({deep_links['⏱️ Lap Times']})")
-    
-    
-                            if show_form:
-                                with st.form(key=f"add_contact_{i}"):
-                                    st.caption(f"Add **{r['original_name']}** to Database")
-                                    # Split name guess
-                                    parts = r['original_name'].split(' ')
-                                    f_geo = parts[0].title()
-                                    l_geo = parts[1].title() if len(parts) > 1 else ""
+                            # Always Show Form
+                            st.markdown("---")
+                            with st.form(key=f"add_contact_{i}"):
+                                st.caption(f"Add **{r['original_name']}** to Database")
+                                # Split name guess
+                                parts = r['original_name'].split(' ')
+                                f_geo = parts[0].title()
+                                l_geo = parts[1].title() if len(parts) > 1 else ""
                                     
                                     in_first = st.text_input("First Name", value=f_geo, key=f"first_{i}_{r['original_name']}")
                                     in_last = st.text_input("Last Name", value=l_geo, key=f"last_{i}_{r['original_name']}")
