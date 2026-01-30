@@ -790,6 +790,10 @@ def render_race_outreach(dashboard):
 
         st.write(f"Showing {len(filtered)} riders")
         
+        # Initialize session state for tracking expanded cards
+        if "just_added_names" not in st.session_state:
+            st.session_state.just_added_names = set()
+
         # Paginate to show top 20 by default to avoid lag
         for i, r in enumerate(filtered[:20]): 
             # Color Code / Icon logic
@@ -799,12 +803,20 @@ def render_race_outreach(dashboard):
             else:
                  icon = "🆕" 
                  label = "NEW PROSPECT"
+            
+            # Keep expanded if just added
+            is_expanded = r['original_name'] in st.session_state.just_added_names
                  
-            with st.expander(f"{icon} {r['original_name']}  [{label}]"):
+            with st.expander(f"{icon} {r['original_name']}  [{label}]", expanded=is_expanded):
                 
                 # BRANCH: MATCHED RIDER -> Unified Card
                 if r['match_status'] == 'match_found' and r.get('match'):
                     st.success(f"✅ Matched: {r['match'].full_name}")
+                    
+                    # Clear from "just added" loop triggers (optional cleanup, but maybe keep until closed?)
+                    # If we clear it now, it might close on next unrelated interaction. 
+                    # Let's keep it in set for this session or until manual close (Streamlit handles manual).
+                    
                     render_unified_card_content(r['match'], dashboard, key_suffix=f"race_{i}", default_event_name=event_name)
                     
                 else:
@@ -890,6 +902,9 @@ def render_race_outreach(dashboard):
                                             new_rider = dashboard.riders[in_email]
                                             r['match_status'] = 'match_found'
                                             r['match'] = new_rider
+                                            
+                                        # Track this name to keep expander open
+                                        st.session_state.just_added_names.add(r['original_name'])
                                             
                                         st.toast(f"Added {in_first}! Now click 'Confirm Message Sent' when ready.")
                                         st.rerun()
