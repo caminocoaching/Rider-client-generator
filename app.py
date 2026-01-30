@@ -718,8 +718,27 @@ def render_race_outreach(dashboard):
             with st.spinner(f"Analyzing {len(clean_names)} riders..."):
                 results = dashboard.process_race_results(clean_names, event_name=event_name)
                 st.session_state.matched_results = results
+                
+                # PERSISTENCE: Save to disk for refresh survival
+                import pickle
+                try:
+                    with open(os.path.join(DATA_DIR, "last_race_analysis.pkl"), "wb") as f:
+                        pickle.dump(results, f)
+                except Exception as e:
+                    print(f"Failed to cache analysis: {e}")
 
     # 3. Processed Results
+    # AUTO-LOAD Persistence if session empty
+    if 'matched_results' not in st.session_state or not st.session_state.matched_results:
+        import pickle
+        cache_path = os.path.join(DATA_DIR, "last_race_analysis.pkl")
+        if os.path.exists(cache_path):
+            try:
+                with open(cache_path, "rb") as f:
+                    st.session_state.matched_results = pickle.load(f)
+            except Exception:
+                pass # Corrupt or old file
+                
     if 'matched_results' in st.session_state and st.session_state.matched_results:
         st.divider()
         results = st.session_state.matched_results
