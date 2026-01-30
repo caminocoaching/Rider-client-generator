@@ -2467,9 +2467,13 @@ class FunnelDashboard:
             rider = self.riders.get(email.lower())
             if rider:
                 rider.current_stage = new_stage
-                # Logic: If moving to OUTREACH, set outreach_date = now if not set
-                if new_stage == FunnelStage.OUTREACH and not rider.outreach_date:
+                
+                # Logic: If moving to OUTREACH/MESSAGED, set outreach_date = now
+                # We update it even if it exists, because a MANUAL move implies a new action/re-engagement.
+                # This ensures they show up in "Current Month" dashboard.
+                if new_stage in [FunnelStage.MESSAGED, FunnelStage.OUTREACH]:
                     rider.outreach_date = datetime.now()
+                    
                 elif new_stage == FunnelStage.STRATEGY_CALL_BOOKED and not rider.strategy_call_booked_date:
                     rider.strategy_call_booked_date = datetime.now()
                 elif new_stage == FunnelStage.SALE_CLOSED:
