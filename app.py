@@ -689,17 +689,36 @@ def render_race_outreach(dashboard):
                 df = pd.read_csv(uploaded_file)
                 # Try to find relevant columns
                 name_col = None
+                candidates = ['competitor', 'name', 'rider', 'driver', 'first name', 'last name', 'racer']
+                
+                # Smart search
                 for col in df.columns:
-                    if col.lower() in ['competitor', 'name', 'rider', 'driver']:
+                    if str(col).lower().strip() in candidates:
                         name_col = col
                         break
+                    # Partial match
+                    if "name" in str(col).lower() or "rider" in str(col).lower():
+                        name_col = col # Keep looking for better match or stick with this
                 
-                if name_col:
-                    names = df[name_col].dropna().astype(str).tolist()
+                # UI Fallback
+                st.caption(f"Detected {len(df)} rows.")
+                col_options = list(df.columns)
+                
+                # Set default index if we found a candidate
+                idx = col_options.index(name_col) if name_col in col_options else 0
+                
+                selected_col = st.selectbox("Select Name Column", col_options, index=idx, help="Which column contains the names?")
+                
+                if selected_col:
+                    names = df[selected_col].dropna().astype(str).tolist()
                     raw_results_list = names
-                    st.success(f"Extracted {len(names)} riders from column '{name_col}'")
-                else:
-                    st.error("Could not find 'Competitor' or 'Name' column.")
+                    
+                    with st.expander("👀 Preview Extracted Names"):
+                        st.write(names[:10])
+                        
+                    if len(names) > 0:
+                         st.success(f"Ready to analyze {len(names)} riders!")
+                
             except Exception as e:
                 st.error(f"Error reading CSV: {e}")
                 
