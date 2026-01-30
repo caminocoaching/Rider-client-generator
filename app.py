@@ -868,31 +868,41 @@ def render_race_outreach(dashboard):
                     with rc1:
                         st.write("#### 📝 Outreach Draft")
                         
-                        # Added Template Selector back
-                        template_options = ["Generic Race Outreach", "Congrats on Podium", "Tough Weekend", "Blank Hook"]
-                        selected_template = st.selectbox("Template", template_options, key=f"tpl_{i}_{r['original_name']}")
+                    # LEFT: Draft Message (Standard)
+                    with rc1:
+                        st.write("#### 📝 Outreach Draft")
                         
-                        # Pass selection to generator (assuming generator supports it, or use logic here)
-                        # Current generator signature might just take event_name. 
-                        # Let's check signature. 
-                        # If generator doesn't support template arg, we might need to modify it or do simple logic here.
-                        # For now, let's assume we can pass it or implement simple switching here.
+                        # --- TEMPLATE DEFINITIONS (Restored from PDF) ---
+                        f_name = r['original_name'].split(' ')[0]
                         
-                        if selected_template == "Blank Hook":
-                             msg = f"Hey {r['original_name'].split(' ')[0]}, "
-                        elif selected_template == "Congrats on Podium":
-                             msg = f"Hey {r['original_name'].split(' ')[0]}, massive congrats on the podium at {event_name}! 🔥 Saw the results, great riding."
-                        elif selected_template == "Tough Weekend":
-                             msg = f"Hey {r['original_name'].split(' ')[0]}, saw you were at {event_name}. Looks like a tough one on the sheets, hope you're all good? 👊"
-                        else:
-                             # Default / Generic
-                             msg = dashboard.generate_outreach_message(r, event_name)
+                        templates = {
+                            "1. Cold Outreach (Weekend)": f"Hey {f_name}, I see you were out at {event_name}. How was the weekend for you?",
+                            "1. Cold Outreach (Series)": f"Hi {f_name}, I see you were out at {event_name}. How's the series going for you so far?",
+                            "1. Cold Outreach (Season)": f"Hey {f_name}, I see you were out at {event_name}. How's the season treating you?",
+                            
+                            "2. Reply (Productive)": f"Thanks for the reply {f_name},\n\nSounds like you had a productive weekend!\n\nNot sure if you know — I'm a Flow Performance Coach. A bit different from the usual rider-coach. I work with riders in many championships on the mental side of racing — helping them access the Flow State, where performance becomes automatic, consistent, and confident under pressure.\n\nI've built a free post-race assessment tool that shows exactly where your gains are hiding — and how to unlock them in time for the next round.\n\nWant me to send it over?",
+                            
+                            "2. Reply (Tough)": f"Thanks for the reply {f_name},\n\nSounds like you had a tough weekend.\n\nNot sure if you know — I'm a Flow Performance Coach. A bit different from the usual rider-coach. I work with riders in many championships on the mental side of racing — helping them access the Flow State, where performance becomes automatic, consistent, and confident under pressure.\n\nI've built a free post-race assessment tool that shows exactly where your gains are hiding — and how to unlock them in time for the next round.\n\nWant me to send it over?",
+                            
+                            "2. Reply (Great Work)": f"Thanks for the reply {f_name},\n\nThat’s Great work well done!\n\nNot sure if you know — I'm a Flow Performance Coach. A bit different from the usual rider-coach. I work with riders in many championships on the mental side of racing — helping them access the Flow State, where performance becomes automatic, consistent, and confident under pressure.\n\nI've built a free post-race assessment tool that shows exactly where your gains are hiding — and how to unlock them in time for the next round.\n\nWant me to send it over?",
+                            
+                            "3. Send Blueprint Link": f"Awesome. Here is the link to the assessment: [LINK]\n\nIt takes about 4 minutes. Once you're done, let me know and I can send over some specific feedback based on your score.",
+                            
+                            "4. Follow Up (Bump)": f"Hey {f_name}, just bumping this in case you missed it amid the post-race chaos?",
+                            "Blank Hook": f"Hey {f_name}, "
+                        }
+                        
+                        template_options = list(templates.keys())
+                        selected_tpl_name = st.selectbox("Select Template", template_options, key=f"tpl_{i}_{r['original_name']}")
+                        
+                        msg_val = templates[selected_tpl_name]
 
                         # Key needs to include event_name to force refresh
                         evt_key = event_name.replace(" ", "_").lower()
-                        st.text_area("Message", value=msg, height=100, key=f"msg_{i}_{r['original_name']}_{evt_key}")
+                        st.text_area("Message", value=msg_val, height=250, key=f"msg_{i}_{r['original_name']}_{evt_key}")
+                        
                         st.caption("Copy for DM:")
-                        st.code(msg, language=None)
+                        st.code(msg_val, language=None)
                         
                         # MESSAGE SENT ACTION (Disabled for New Prospect until added)
                         st.write("---")
