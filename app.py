@@ -1318,6 +1318,8 @@ if HAS_GSHEETS:
             # Define cached loader to prevent API 429 Errors
             @st.cache_data(ttl=300) # Cache for 5 minutes
             def load_all_sheets_data():
+                 import concurrent.futures
+                 
                  SHEET_CONFIG = {
                      "rider_db": "Rider Database.csv",
                      "strategy_apps": "Strategy Call Application.csv",
@@ -1336,24 +1338,32 @@ if HAS_GSHEETS:
                  missing_keys = []
                  load_errors = []
                  
-                 # Check for missing keys
-                 for secret_key in SHEET_CONFIG.keys():
-                     if secret_key not in sheet_secrets or not sheet_secrets[secret_key]:
-                         missing_keys.append(secret_key)
-                
-                 # Load what we have
+                 # 1. Identify valid tasks
+                 tasks = {}
                  for secret_key, internal_file in SHEET_CONFIG.items():
                      url = sheet_secrets.get(secret_key, "")
                      if url:
+                         tasks[secret_key] = (url, internal_file)
+                     else:
+                         missing_keys.append(secret_key)
+                 
+                 # 2. Execute in Parallel
+                 # Using 5 workers to avoid hitting Google API Rate Limits too hard
+                 # (Limit is usually user-based, but safe to throttle slightly)
+                 with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+                     future_to_key = {
+                         executor.submit(load_google_sheet, url): (key, internal_file)
+                         for key, (url, internal_file) in tasks.items()
+                     }
+                     
+                     for future in concurrent.futures.as_completed(future_to_key):
+                         key, internal_file = future_to_key[future]
                          try:
-                             # Attempt load
-                             # Note: load_google_sheet handles basic errors, but we wrap it safely
-                             df = load_google_sheet(url)
+                             df = future.result()
                              if df is not None and not df.empty:
                                  loaded_data[internal_file] = df
-                         except Exception as e:
-                             # Log error but don't stop everything
-                             load_errors.append(f"{secret_key}: {str(e)}")
+                         except Exception as exc:
+                             load_errors.append(f"{key}: {exc}")
                              
                  return loaded_data, missing_keys, load_errors
             
