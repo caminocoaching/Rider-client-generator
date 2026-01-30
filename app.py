@@ -887,27 +887,29 @@ def render_race_outreach(dashboard):
                             # Always show Deep Search Toolkit (No buttons, no expander)
                             st.markdown("---")
                             st.markdown("#### 🕵️ Deep Search Toolkit")
-                            st.caption("Use these links to find their profile URL.")
+                            st.caption("Copy Name for manual search:")
+                            st.code(r['original_name'], language=None)
                             
                             deep_links = dashboard.race_manager.social_finder.generate_deep_search_links(r['original_name'], event_name)
                             
                             c_d1, c_d2 = st.columns(2)
                             with c_d1:
-                                st.markdown(f"**Discovery**")
-                                st.markdown(f"[🔍 Core Search]({deep_links['🔍 Core Discovery']})")
-                                if '🏁 Event check' in deep_links:
-                                    st.markdown(f"[🏁 Matches Event?]({deep_links['🏁 Event check']})")
-                            with c_d2:
-                                st.markdown(f"**Platforms**")
-                                st.markdown(f"[📷 Instagram]({deep_links['📸 Instagram Profile']})")
-                                st.markdown(f"[👥 Facebook]({deep_links['👥 Facebook Profile']})")
+                                st.markdown(f"**Facebook**")
+                                st.markdown(f"[👥 Open Search (Auto)]({deep_links['👥 Facebook Direct']})")
                                 
-                            st.caption("Validation")
+                            with c_d2:
+                                st.markdown(f"**Instagram**")
+                                st.markdown(f"[📷 Open Instagram]({deep_links['📸 Instagram Direct']})")
+                                st.caption(f"[Alternative: Google Search]({deep_links['(Backup) IG Google']})")
+
+                            st.caption("Validation Tools")
                             c_v1, c_v2 = st.columns(2)
-                            if '📋 Racing Org Check' in deep_links:
-                                with c_v1: st.markdown(f"[📋 Org Check]({deep_links['📋 Racing Org Check']})")
-                            if '⏱️ Lap Times' in deep_links:
-                                with c_v2: st.markdown(f"[⏱️ Lap Times]({deep_links['⏱️ Lap Times']})")
+                            with c_v1:
+                                if '📋 Racing Org Check' in deep_links:
+                                     st.markdown(f"[📋 Org Check]({deep_links['📋 Racing Org Check']})")
+                            with c_v2:
+                                if '⏱️ Lap Times' in deep_links:
+                                     st.markdown(f"[⏱️ Lap Times]({deep_links['⏱️ Lap Times']})")
     
                             # Always Show Form
                             st.markdown("---")

@@ -3117,9 +3117,15 @@ class SocialFinder:
         # Level 1: Core Discovery
         links['🔍 Core Discovery'] = make_link(f'"{name}" AND ("racing" OR "racer" OR "motorsport" OR "bike")')
         
-        # Level 2: Socials
-        links['📸 Instagram Profile'] = make_link(f'"{name}" site:instagram.com ("racing" OR "track day" OR "moto")')
-        links['👥 Facebook Profile'] = make_link(f'"{name}" site:facebook.com ("motorcycle racing" OR "CVMA" OR "WERA")')
+        # Level 2: Socials (Direct Platform Search preferred by User)
+        # Facebook: Direct search (shows mutuals)
+        links['👥 Facebook Direct'] = f"https://www.facebook.com/search/people/?q={urllib.parse.quote(name)}"
+        
+        # Instagram: No reliable web search URL, so we link to Home for pasting
+        links['📸 Instagram Direct'] = "https://www.instagram.com/"
+        
+        # Keep Google backups just in case
+        links['(Backup) IG Google'] = make_link(f'"{name}" site:instagram.com ("racing" OR "track day" OR "moto")')
         
         # Level 3: Context / Event
         if event_name:
