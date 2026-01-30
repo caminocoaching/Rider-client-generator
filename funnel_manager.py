@@ -769,6 +769,9 @@ class DataLoader:
                  print("Airtable Manager Initialized")
              except Exception as e:
                  print(f"Failed to init Airtable: {e}")
+                 self.airtable = None
+        else:
+             print("Airtable secrets not found.")
 
     def load_all_data(self) -> Dict[str, Rider]:
         """Load data from all CSV files and merge into rider records"""
