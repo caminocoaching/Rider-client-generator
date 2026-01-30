@@ -961,6 +961,15 @@ def render_race_outreach(dashboard):
                                             r['match_status'] = 'match_found'
                                             r['match'] = new_rider
                                             
+                                            # PERSISTENCE: Save updated results to disk immediately
+                                            # This ensures if user refreshes, they stay "Matched"
+                                            import pickle
+                                            try:
+                                                with open(os.path.join(DATA_DIR, "last_race_analysis.pkl"), "wb") as f:
+                                                    pickle.dump(st.session_state.matched_results, f)
+                                            except Exception:
+                                                pass
+                                            
                                         # Track this name to keep expander open
                                         st.session_state.just_added_names.add(r['original_name'])
                                             
