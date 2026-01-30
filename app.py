@@ -868,36 +868,33 @@ def render_race_outreach(dashboard):
                                 f_geo = parts[0].title()
                                 l_geo = parts[1].title() if len(parts) > 1 else ""
                                     
-                                    in_first = st.text_input("First Name", value=f_geo, key=f"first_{i}_{r['original_name']}")
-                                    in_last = st.text_input("Last Name", value=l_geo, key=f"last_{i}_{r['original_name']}")
-                                    in_email = st.text_input("Email (Required - make one up if needed)", value=f"no_email_{f_geo}_{l_geo}".lower(), key=f"email_{i}_{r['original_name']}")
-                                    in_champ = st.text_input("Championship", key=f"champ_{i}_{r['original_name']}")
+                                in_first = st.text_input("First Name", value=f_geo, key=f"first_{i}_{r['original_name']}")
+                                in_last = st.text_input("Last Name", value=l_geo, key=f"last_{i}_{r['original_name']}")
+                                in_email = st.text_input("Email (Required - make one up if needed)", value=f"no_email_{f_geo}_{l_geo}".lower(), key=f"email_{i}_{r['original_name']}")
+                                in_champ = st.text_input("Championship", key=f"champ_{i}_{r['original_name']}")
+                                
+                                # Pre-fill FB/IG (Manual now, so empty defaults)
+                                in_fb = st.text_input("Facebook URL", key=f"fb_{i}_{r['original_name']}")
+                                in_ig = st.text_input("Instagram URL", key=f"ig_{i}_{r['original_name']}")
+                                
+                                if st.form_submit_button("💾 Save to DB"):
+                                    # 1. Add to DB
+                                    success = dashboard.add_new_rider(in_email, in_first, in_last, in_fb, ig_url=in_ig, championship=in_champ)
                                     
-                                    # Pre-fill FB/IG if found
-                                    pre_fb = found_socials.get('facebook_url', '')
-                                    pre_ig = found_socials.get('instagram_url', '')
-                                    
-                                    in_fb = st.text_input("Facebook URL", value=pre_fb, key=f"fb_{i}_{r['original_name']}")
-                                    in_ig = st.text_input("Instagram URL", value=pre_ig, key=f"ig_{i}_{r['original_name']}")
-                                    
-                                    if st.form_submit_button("💾 Save to DB"):
-                                        # 1. Add to DB
-                                        success = dashboard.add_new_rider(in_email, in_first, in_last, in_fb, ig_url=in_ig, championship=in_champ)
+                                    if success:
+                                        # 2. Update Stage to CONTACT (Not Messaged yet, user must click Confirm Sent)
+                                        dashboard.update_rider_stage(in_email, FunnelStage.CONTACT)
                                         
-                                        if success:
-                                            # 2. Update Stage to CONTACT (Not Messaged yet, user must click Confirm Sent)
-                                            dashboard.update_rider_stage(in_email, FunnelStage.CONTACT)
+                                        # 3. Update Session State
+                                        if in_email in dashboard.riders:
+                                            new_rider = dashboard.riders[in_email]
+                                            r['match_status'] = 'match_found'
+                                            r['match'] = new_rider
                                             
-                                            # 3. Update Session State
-                                            if in_email in dashboard.riders:
-                                                new_rider = dashboard.riders[in_email]
-                                                r['match_status'] = 'match_found'
-                                                r['match'] = new_rider
-                                                
-                                            st.toast(f"Added {in_first}! Now click 'Confirm Message Sent' when ready.")
-                                            st.rerun()
-                                        else:
-                                            st.error("Failed to save.")
+                                        st.toast(f"Added {in_first}! Now click 'Confirm Message Sent' when ready.")
+                                        st.rerun()
+                                    else:
+                                        st.error("Failed to save.")
 # ==============================================================================
 # DATABASE VIEW
 # ==============================================================================
