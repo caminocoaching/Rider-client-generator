@@ -1854,21 +1854,26 @@ class DataLoader:
                     rider = self._get_or_create_rider(fake_email, fname, lname)
                     rider.outreach_channel = OutreachChannel.FACEBOOK_DM
                     
-                    # Assume Contact stage if new
-                    if rider.current_stage == FunnelStage.CONTACT:
-                        rider.current_stage = FunnelStage.CONTACT # Redundant but clear
-                
+                # --- KEY FIX: Force Stage to MESSAGED if they are in this history file ---
+                # This ensures they show up as "Messaged"
+                # Only upgrade if they are currently lower (e.g. Contact or Outreach)
+                if rider.current_stage in [FunnelStage.CONTACT, FunnelStage.OUTREACH]:
+                     rider.current_stage = FunnelStage.MESSAGED
+
                 # Update Outreach Date (Earliest message)
                 try:
-                    timestamps = pd.to_datetime(group['messages__timestamp_ms'], errors='coerce')
+                    timestamps = pd.to_datetime(group['messages__timestamp_ms'], unit='ms', errors='coerce')
                     first_msg = timestamps.min()
                     
-                    if first_msg:
+                    if not pd.isna(first_msg):
                         # If no outreach date or this is earlier (and valid year), update
-                        if not rider.outreach_date or first_msg < rider.outreach_date:
+                        # Convert pandas timestamp to python datetime
+                        first_msg_dt = first_msg.to_pydatetime()
+                        
+                        if not rider.outreach_date or first_msg_dt < rider.outreach_date:
                             # Sanity check year (some exports have bad dates?)
-                            if first_msg.year > 2000:
-                                rider.outreach_date = first_msg.to_pydatetime()
+                            if first_msg_dt.year > 2000:
+                                rider.outreach_date = first_msg_dt
                                 
                 except Exception:
                     pass
