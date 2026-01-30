@@ -3004,7 +3004,7 @@ if __name__ == "__main__":
 # RACE RESULT MANAGER (Restored)
 # =============================================================================
 class SocialFinder:
-    """Find social media profiles for riders using OSINT-style Deep Search"""
+    """Find social media profiles and generate Deep DM Links"""
     
     def find_socials(self, name: str, context: str = "") -> Dict[str, str]:
         """
@@ -3024,10 +3024,6 @@ class SocialFinder:
         
         try:
             from googlesearch import search
-            
-            # We iterate through queries until we find good stuff?
-            # Or just search the most promising one? 
-            # Trying to aggregate results from the best query first.
             
             # Use the most specific one first
             base_query = queries[0] 
@@ -3058,6 +3054,48 @@ class SocialFinder:
             print(f"Search error: {e}")
             
         return found
+
+    def clean_social_url(self, url: str) -> Optional[str]:
+        """Extract username/handle from a raw URL"""
+        if not url: return None
+        
+        # Basic cleanup
+        clean = url.strip().rstrip('/')
+        
+        # Remove query params
+        if '?' in clean:
+            clean = clean.split('?')[0]
+            
+        return clean
+
+    def generate_deep_dm_link(self, platform: str, url: str, message: str = "") -> Optional[str]:
+        """
+        Generate a direct 'Mobile First' deep link for DMs.
+        - Facebook: m.me/{username}
+        - Instagram: ig.me/m/{username}
+        """
+        import urllib.parse
+        
+        if not url: return None
+        
+        clean_url = self.clean_social_url(url)
+        username = clean_url.split('/')[-1]
+        
+        # Safety check: if username is 'profile.php', we might need ID parsing (skip for now)
+        if 'profile.php' in username:
+            return None 
+            
+        encoded_msg = urllib.parse.quote(message)
+        
+        if platform == 'facebook':
+            # https://m.me/<USERNAME>?text=<MESSAGE>
+            return f"https://m.me/{username}?text={encoded_msg}"
+            
+        elif platform == 'instagram':
+            # https://ig.me/m/<USERNAME>?text=<MESSAGE>
+            return f"https://ig.me/m/{username}?text={encoded_msg}"
+            
+        return None
 
     def generate_deep_search_links(self, name: str, event_name: str = "") -> Dict[str, str]:
         """

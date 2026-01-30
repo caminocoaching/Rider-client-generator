@@ -146,11 +146,49 @@ def render_unified_card_content(rider, dashboard, key_suffix="", default_event_n
         
         # Socials
         links = []
-        if rider.facebook_url: links.append(f"[Facebook]({rider.facebook_url})")
-        if rider.instagram_url: links.append(f"[Instagram]({rider.instagram_url})")
+        if rider.facebook_url: 
+            links.append(f"[Facebook]({rider.facebook_url})")
+        if rider.instagram_url: 
+            links.append(f"[Instagram]({rider.instagram_url})")
         
         if links:
             st.markdown(f"**Socials:** {' | '.join(links)}")
+            
+            # --- DEEP DM ACTION BUTTONS ---
+            # Try to generate mobile-first DM links if URLs exist
+            dm_cols = st.columns(2)
+            
+            # Init finder locally if needed (lightweight)
+            # Ideally passed in, but we can instantiate safely
+            from funnel_manager import SocialFinder
+            finder = SocialFinder()
+            
+            # FB DM
+            if rider.facebook_url:
+                deep_fb = finder.generate_deep_dm_link('facebook', rider.facebook_url, final_msg)
+                if deep_fb:
+                    with dm_cols[0]:
+                        st.markdown(f'''
+                            <a href="{deep_fb}" target="_blank" style="text-decoration:none;">
+                                <button style="width:100%; border:1px solid #4CAF50; background-color:#4CAF50; color:white; padding:5px; border-radius:5px; cursor:pointer;">
+                                   💬 DM on FB (Direct)
+                                </button>
+                            </a>
+                            ''', unsafe_allow_html=True)
+
+            # IG DM
+            if rider.instagram_url:
+                deep_ig = finder.generate_deep_dm_link('instagram', rider.instagram_url, final_msg)
+                if deep_ig:
+                    with dm_cols[1]:
+                        st.markdown(f'''
+                            <a href="{deep_ig}" target="_blank" style="text-decoration:none;">
+                                <button style="width:100%; border:1px solid #E1306C; background-color:#E1306C; color:white; padding:5px; border-radius:5px; cursor:pointer;">
+                                   📸 DM on IG (Direct)
+                                </button>
+                            </a>
+                            ''', unsafe_allow_html=True)
+            
         else:
             query = f"{rider.full_name} motorcycle racing"
             search_url = f"https://www.google.com/search?q={urllib.parse.quote(query)}"
