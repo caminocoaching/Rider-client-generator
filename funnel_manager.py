@@ -27,7 +27,7 @@ import gsheets_loader
 from airtable_manager import AirtableManager
 from datetime import datetime, timedelta
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
 from enum import Enum
 from collections import defaultdict
 import re
