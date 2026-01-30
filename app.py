@@ -867,8 +867,27 @@ def render_race_outreach(dashboard):
                     # LEFT: Draft Message (Standard)
                     with rc1:
                         st.write("#### 📝 Outreach Draft")
-                        # Pass the *current* event name from the widget
-                        msg = dashboard.generate_outreach_message(r, event_name)
+                        
+                        # Added Template Selector back
+                        template_options = ["Generic Race Outreach", "Congrats on Podium", "Tough Weekend", "Blank Hook"]
+                        selected_template = st.selectbox("Template", template_options, key=f"tpl_{i}_{r['original_name']}")
+                        
+                        # Pass selection to generator (assuming generator supports it, or use logic here)
+                        # Current generator signature might just take event_name. 
+                        # Let's check signature. 
+                        # If generator doesn't support template arg, we might need to modify it or do simple logic here.
+                        # For now, let's assume we can pass it or implement simple switching here.
+                        
+                        if selected_template == "Blank Hook":
+                             msg = f"Hey {r['original_name'].split(' ')[0]}, "
+                        elif selected_template == "Congrats on Podium":
+                             msg = f"Hey {r['original_name'].split(' ')[0]}, massive congrats on the podium at {event_name}! 🔥 Saw the results, great riding."
+                        elif selected_template == "Tough Weekend":
+                             msg = f"Hey {r['original_name'].split(' ')[0]}, saw you were at {event_name}. Looks like a tough one on the sheets, hope you're all good? 👊"
+                        else:
+                             # Default / Generic
+                             msg = dashboard.generate_outreach_message(r, event_name)
+
                         # Key needs to include event_name to force refresh
                         evt_key = event_name.replace(" ", "_").lower()
                         st.text_area("Message", value=msg, height=100, key=f"msg_{i}_{r['original_name']}_{evt_key}")
