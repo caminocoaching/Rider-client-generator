@@ -686,7 +686,10 @@ def render_race_outreach(dashboard):
         uploaded_file = st.file_uploader("Upload Timing Sheet CSV", type=['csv'], key="race_file_uploader")
         if uploaded_file:
             try:
+                # Ensure we read from start of file
+                uploaded_file.seek(0)
                 df = pd.read_csv(uploaded_file)
+                
                 # Try to find relevant columns
                 name_col = None
                 candidates = ['competitor', 'name', 'rider', 'driver', 'first name', 'last name', 'racer']
@@ -698,7 +701,7 @@ def render_race_outreach(dashboard):
                         break
                     # Partial match
                     if "name" in str(col).lower() or "rider" in str(col).lower():
-                        name_col = col # Keep looking for better match or stick with this
+                        name_col = col 
                 
                 # UI Fallback
                 st.caption(f"Detected {len(df)} rows.")
@@ -713,9 +716,6 @@ def render_race_outreach(dashboard):
                     names = df[selected_col].dropna().astype(str).tolist()
                     raw_results_list = names
                     
-                    with st.expander("👀 Preview Extracted Names"):
-                        st.write(names[:10])
-                        
                     if len(names) > 0:
                          st.success(f"Ready to analyze {len(names)} riders!")
                 
