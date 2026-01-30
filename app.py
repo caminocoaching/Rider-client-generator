@@ -956,8 +956,8 @@ def render_race_outreach(dashboard):
                                         dashboard.update_rider_stage(final_email, FunnelStage.CONTACT)
                                         
                                         # 3. Update Session State
-                                        if in_email in dashboard.riders:
-                                            new_rider = dashboard.riders[in_email]
+                                        if final_email in dashboard.riders:
+                                            new_rider = dashboard.riders[final_email]
                                             r['match_status'] = 'match_found'
                                             r['match'] = new_rider
                                             
