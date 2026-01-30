@@ -4,7 +4,7 @@ import pandas as pd
 import plotly.express as px
 import os
 from datetime import datetime
-from funnel_manager import FunnelDashboard, FunnelStage
+from funnel_manager import FunnelDashboard, FunnelStage, Rider
 
 # --- CONFIGURATION ---
 st.set_page_config(page_title="Rider Pipeline", page_icon="🏍️", layout="wide")
