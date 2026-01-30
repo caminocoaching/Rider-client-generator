@@ -223,8 +223,14 @@ def render_unified_card_content(rider, dashboard, key_suffix="", default_event_n
         # Update Details Form
         with st.expander("✏️ Update Details", expanded=True):
             with st.form(key=f"uni_upd_{rider.email}_{key_suffix}"):
-                u_first = st.text_input("First Name", value=rider.first_name, key=f"uni_first_{rider.email}_{key_suffix}")
-                u_last = st.text_input("Last Name", value=rider.last_name, key=f"uni_last_{rider.email}_{key_suffix}")
+                c_name1, c_name2 = st.columns(2)
+                with c_name1:
+                    u_first = st.text_input("First Name", value=rider.first_name, key=f"uni_first_{rider.email}_{key_suffix}")
+                with c_name2:
+                    u_last = st.text_input("Last Name", value=rider.last_name, key=f"uni_last_{rider.email}_{key_suffix}")
+                
+                u_email = st.text_input("Email", value=rider.email, key=f"uni_email_{rider.email}_{key_suffix}")
+                
                 u_fb = st.text_input("Facebook URL", value=rider.facebook_url or "", key=f"uni_fb_{rider.email}_{key_suffix}")
                 u_ig = st.text_input("Instagram URL", value=rider.instagram_url or "", key=f"uni_ig_{rider.email}_{key_suffix}")
                 u_champ = st.text_input("Championship", value=rider.championship or "", key=f"uni_champ_{rider.email}_{key_suffix}")
@@ -244,8 +250,9 @@ def render_unified_card_content(rider, dashboard, key_suffix="", default_event_n
                 if st.form_submit_button("💾 Save Updates (Sync & Migrate)"):
                     ts_follow = datetime.combine(u_follow, datetime.min.time()) if u_follow else None
                     
+                    # Use u_email (in case they updated it from the slug)
                     dashboard.add_new_rider(
-                        rider.email, u_first, u_last, u_fb, ig_url=u_ig, championship=u_champ, notes=u_notes, follow_up_date=ts_follow
+                        u_email, u_first, u_last, u_fb, ig_url=u_ig, championship=u_champ, notes=u_notes, follow_up_date=ts_follow
                     )
                     st.toast(f"Updated & Synced {u_first}!")
                     st.rerun()
