@@ -975,7 +975,8 @@ def render_database_view(dashboard):
             st.caption(f"Found {len(df)} matches")
             
         # DISPLAY
-        st.dataframe(
+        # Interactive Dataframe
+        event = st.dataframe(
             df, 
             use_container_width=True,
             column_config={
@@ -984,8 +985,25 @@ def render_database_view(dashboard):
                 "Notes": st.column_config.TextColumn("Notes", width="large")
             },
             hide_index=True,
-            height=600
+            height=600,
+            on_select="rerun",
+            selection_mode="single-row"
         )
+        
+        # Handle Selection
+        if len(event.selection["rows"]):
+            selected_idx = event.selection["rows"][0]
+            try:
+                # Get the row from the (potentially filtered) dataframe
+                selected_row = df.iloc[selected_idx]
+                email_selected = selected_row["Email"]
+                
+                # Open Dialog
+                if email_selected in dashboard.riders:
+                    r_selected = dashboard.riders[email_selected]
+                    view_unified_dialog(r_selected, dashboard)
+            except Exception as e:
+                st.warning(f"Could not open rider: {e}")
         
         # DOWNLOAD
         @st.cache_data
