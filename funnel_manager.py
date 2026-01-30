@@ -3204,6 +3204,10 @@ class RaceResultManager:
         raw_tokens = set(clean_raw.split())
         
         for email, rider in self.riders.items():
+            # SANITY CHECK: Ignore corrupt riders with massive names (e.g. concatenated strings)
+            if len(rider.full_name) > 60:
+                continue
+
             db_name = rider.full_name.lower().strip()
             db_tokens = set(db_name.split())
             
