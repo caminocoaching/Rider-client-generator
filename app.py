@@ -1435,7 +1435,8 @@ def load_all_sheets_data_cached():
          "sleep_test": "Sleep Test.csv",
          "mindset_quiz": "Mindset Quiz.csv",
          "race_weekend": "export (15).csv",
-         "season_review": "export (16).csv"
+         "season_review": "export (16).csv",
+         "xperiencify": "Xperiencify.csv"
      }
      
      sheet_secrets = st.secrets.get("sheets", {})
