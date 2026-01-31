@@ -2189,30 +2189,30 @@ class DataLoader:
         filename = 'Flow Profile.csv'
 
         for row in self._get_data_iter(filename):
-            email = row.get('Email', '').strip()
+            email = row.get('email', '').strip()
             if not email:
                 continue
 
             rider = self._get_or_create_rider(
                 email,
-                row.get('First name', ''),
-                row.get('Last name', '')
+                row.get('first name', ''),
+                row.get('last name', '')
             )
 
             # Map fields
             # Submit Date (UTC) -> flow_profile_date
             rider.flow_profile_date = self._parse_date(
-                row.get('Submit Date (UTC)', '')
+                row.get('submit date (utc)', '')
             )
 
             # Score -> flow_profile_score
             try:
-                rider.flow_profile_score = float(row.get('Score', '0'))
+                rider.flow_profile_score = float(row.get('score', '0'))
             except (ValueError, TypeError):
                 pass
 
             # Ending -> flow_profile_url and result
-            ending_url = row.get('Ending', '')
+            ending_url = row.get('ending', '')
             rider.flow_profile_url = ending_url
             
             # --- UPDATE STAGE ---
