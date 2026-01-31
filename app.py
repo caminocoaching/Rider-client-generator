@@ -859,13 +859,26 @@ def render_race_outreach(dashboard):
                 
                 # BRANCH: MATCHED RIDER -> Unified Card
                 if r['match_status'] == 'match_found' and r.get('match'):
-                    st.success(f"✅ Matched: {r['match'].full_name}")
+                    rider_match = r['match']
                     
-                    # Clear from "just added" loop triggers (optional cleanup, but maybe keep until closed?)
-                    # If we clear it now, it might close on next unrelated interaction. 
-                    # Let's keep it in set for this session or until manual close (Streamlit handles manual).
-                    
-                    render_unified_card_content(r['match'], dashboard, key_suffix=f"race_{i}", default_event_name=event_name)
+                    # Special Case: No Socials
+                    if rider_match.current_stage == FunnelStage.NO_SOCIALS:
+                        st.warning(f"🚫 Matched: {rider_match.full_name} (No Socials Found)")
+                        st.caption("This rider was previously flagged as not having reachable social media.")
+                        
+                        # Allow "Un-flagging" if found now?
+                        if st.button("Re-open Search", key=f"reopen_{i}_{r['original_name']}"):
+                            dashboard.update_rider_stage(rider_match.email, FunnelStage.CONTACT) # Reset to Contact
+                            st.rerun()
+                            
+                    else:
+                        st.success(f"✅ Matched: {rider_match.full_name}")
+                        
+                        # Clear from "just added" loop triggers (optional cleanup, but maybe keep until closed?)
+                        # If we clear it now, it might close on next unrelated interaction. 
+                        # Let's keep it in set for this session or until manual close (Streamlit handles manual).
+                        
+                        render_unified_card_content(rider_match, dashboard, key_suffix=f"race_{i}", default_event_name=event_name)
                     
                 else:
                     # BRANCH: NEW PROSPECT -> Deep Search & Add Form
@@ -1034,7 +1047,7 @@ def render_race_outreach(dashboard):
                                     final_email, nf_first, nf_last, "", "", "", 
                                     notes="Marked as No Social Media Found during Race Outreach."
                                 )
-                                dashboard.update_rider_stage(final_email, FunnelStage.NOT_A_FIT)
+                                dashboard.update_rider_stage(final_email, FunnelStage.NO_SOCIALS)
                                 
                                 # 3. Update UI State
                                 if final_email in dashboard.riders:

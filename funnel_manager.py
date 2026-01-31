@@ -92,6 +92,7 @@ class FunnelStage(Enum):
     FLOW_PROFILE_COMPLETED = "Flow Profile Completed"
     MINDSET_QUIZ_COMPLETED = "Mindset Quiz Completed"
     SLEEP_TEST_COMPLETED = "Sleep Test Completed"
+    NO_SOCIALS = "No Socials Found"
     
     # Legacy / Compatibility Aliases
     OUTREACH = "Messaged"
