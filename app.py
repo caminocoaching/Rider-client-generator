@@ -972,6 +972,39 @@ def render_race_outreach(dashboard):
                                 if '⏱️ Lap Times' in deep_links:
                                      st.markdown(f"[⏱️ Lap Times]({deep_links['⏱️ Lap Times']})")
     
+                            # NOT FOUND BUTTON (Top of section)
+                            st.markdown("---")
+                            if st.button("🚫 Not Found / No Socials", key=f"nf_{i}_{r['original_name']}", use_container_width=True):
+                                # Auto-add as "Not A Fit" to prevent researching again
+                                # 1. Generate Slug
+                                nf_first = r['original_name'].split(' ')[0]
+                                nf_last = r['original_name'].split(' ')[1] if ' ' in r['original_name'] else ""
+                                slug = r['original_name'].lower().strip().replace(' ', '_')
+                                slug = "".join([c for c in slug if c.isalnum() or c == '_'])
+                                final_email = f"no_email_{slug}"
+                                
+                                # 2. Add as Not A Fit
+                                dashboard.add_new_rider(
+                                    final_email, nf_first, nf_last, "", "", "", 
+                                    notes="Marked as No Social Media Found during Race Outreach."
+                                )
+                                dashboard.update_rider_stage(final_email, FunnelStage.NO_SOCIALS)
+                                
+                                # 3. Update UI State
+                                if final_email in dashboard.riders:
+                                    r['match_status'] = 'match_found'
+                                    r['match'] = dashboard.riders[final_email]
+                                    
+                                    # Persistence
+                                    import pickle
+                                    try:
+                                        with open(os.path.join(DATA_DIR, "last_race_analysis.pkl"), "wb") as f:
+                                            pickle.dump(st.session_state.matched_results, f)
+                                    except: pass
+                                    
+                                    st.toast(f"Marked {r['original_name']} as Not Found.")
+                                    st.rerun()
+
                             # Always Show Form
                             st.markdown("---")
                             with st.form(key=f"add_contact_{i}"):
@@ -1032,37 +1065,7 @@ def render_race_outreach(dashboard):
                                     else:
                                         st.error("Failed to save.")
                             
-                            # NOT FOUND BUTTON
-                            if st.button("🚫 Not Found / No Socials", key=f"nf_{i}_{r['original_name']}", use_container_width=True):
-                                # Auto-add as "Not A Fit" to prevent researching again
-                                # 1. Generate Slug
-                                nf_first = r['original_name'].split(' ')[0]
-                                nf_last = r['original_name'].split(' ')[1] if ' ' in r['original_name'] else ""
-                                slug = r['original_name'].lower().strip().replace(' ', '_')
-                                slug = "".join([c for c in slug if c.isalnum() or c == '_'])
-                                final_email = f"no_email_{slug}"
-                                
-                                # 2. Add as Not A Fit
-                                dashboard.add_new_rider(
-                                    final_email, nf_first, nf_last, "", "", "", 
-                                    notes="Marked as No Social Media Found during Race Outreach."
-                                )
-                                dashboard.update_rider_stage(final_email, FunnelStage.NO_SOCIALS)
-                                
-                                # 3. Update UI State
-                                if final_email in dashboard.riders:
-                                    r['match_status'] = 'match_found'
-                                    r['match'] = dashboard.riders[final_email]
-                                    
-                                    # Persistence
-                                    import pickle
-                                    try:
-                                        with open(os.path.join(DATA_DIR, "last_race_analysis.pkl"), "wb") as f:
-                                            pickle.dump(st.session_state.matched_results, f)
-                                    except: pass
-                                    
-                                    st.toast(f"Marked {r['original_name']} as Not Found.")
-                                    st.rerun()
+
 # ==============================================================================
 # DATABASE VIEW
 # ==============================================================================
