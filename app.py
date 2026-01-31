@@ -53,13 +53,14 @@ def load_dashboard_data(overrides=None):
     return dashboard
 
 @st.cache_resource
-def load_smart_reply():
+def load_smart_reply(rider_db=None):
     if HAS_GSHEETS:
         # Check if we should use smart reply?
         pass # It's independent.
     
     if HAS_SMART_REPLY:
-        return SmartReplyManager(DATA_DIR)
+        # Pass the rider_db to identify winners
+        return SmartReplyManager(DATA_DIR, rider_db=rider_db)
     return None
 
 
@@ -233,7 +234,8 @@ def view_rider_dialog(r, dashboard, smart_reply, stage_config):
             notes_in = st.text_area("Notes", value=r.notes or "", key=f"dlg_no_{r.email}")
             
             # Status
-            STATUS_OPTIONS = [FunnelStage.CONTACT, FunnelStage.MESSAGED, FunnelStage.RACE_WEEKEND, FunnelStage.LINK_SENT, FunnelStage.BLUEPRINT_STARTED, FunnelStage.DAY1_COMPLETE, FunnelStage.DAY2_COMPLETE, FunnelStage.STRATEGY_CALL_BOOKED, FunnelStage.CLIENT, FunnelStage.NOT_A_FIT, FunnelStage.FOLLOW_UP]
+            # Status
+            STATUS_OPTIONS = [FunnelStage.CONTACT, FunnelStage.MESSAGED, FunnelStage.REPLIED, FunnelStage.RACE_WEEKEND, FunnelStage.LINK_SENT, FunnelStage.BLUEPRINT_STARTED, FunnelStage.DAY1_COMPLETE, FunnelStage.DAY2_COMPLETE, FunnelStage.STRATEGY_CALL_BOOKED, FunnelStage.CLIENT, FunnelStage.NOT_A_FIT, FunnelStage.FOLLOW_UP]
             
             current_idx = 0
             try: current_idx = STATUS_OPTIONS.index(r.current_stage)
@@ -382,8 +384,8 @@ def render_dashboard(dashboard, daily_metrics, riders):
 
 
     
-    # Init Smart Reply
-    smart_reply = load_smart_reply()
+    # --- LOAD SMART REPLY ---
+    smart_reply = load_smart_reply(dashboard.riders)
     
     now = datetime.now()
     
@@ -424,6 +426,7 @@ def render_dashboard(dashboard, daily_metrics, riders):
         # REMOVED: "Leads/Contact" as per user request (it's in Database)
         
         {"label": "Messaged", "val": [FunnelStage.MESSAGED, FunnelStage.RACE_WEEKEND], "date_attr": 'outreach_date'},
+        {"label": "Replied", "val": [FunnelStage.REPLIED], "date_attr": 'outreach_date'}, # New Stage
         {"label": "Link Sent", "val": [FunnelStage.LINK_SENT, FunnelStage.BLUEPRINT_LINK_SENT], "date_attr": 'outreach_date'}, # or create link_sent_date if exists, fallback to outreach
         
         {"label": "Registered", "val": [FunnelStage.BLUEPRINT_STARTED, FunnelStage.REGISTERED], "date_attr": 'registered_date'},
@@ -872,27 +875,36 @@ def render_race_outreach(dashboard):
                     with rc1:
                         st.write("#### 📝 Outreach Draft")
                         
-                        # --- TEMPLATE DEFINITIONS (Restored from PDF) ---
+                        # --- TEMPLATE DEFINITIONS (Restored & Merged) ---
                         f_name = r['original_name'].split(' ')[0]
                         
-                        templates = {
+                        # 1. Custom/Restored Contextual Templates
+                        custom_templates = {
                             "1. Cold Outreach (Weekend)": f"Hey {f_name}, I see you were out at {event_name}. How was the weekend for you?",
                             "1. Cold Outreach (Series)": f"Hi {f_name}, I see you were out at {event_name}. How's the series going for you so far?",
                             "1. Cold Outreach (Season)": f"Hey {f_name}, I see you were out at {event_name}. How's the season treating you?",
-                            
-                            "2. Reply (Productive)": f"Thanks for the reply {f_name},\n\nSounds like you had a productive weekend!\n\nNot sure if you know — I'm a Flow Performance Coach. A bit different from the usual rider-coach. I work with riders in many championships on the mental side of racing — helping them access the Flow State, where performance becomes automatic, consistent, and confident under pressure.\n\nI've built a free post-race assessment tool that shows exactly where your gains are hiding — and how to unlock them in time for the next round.\n\nWant me to send it over?",
-                            
-                            "2. Reply (Tough)": f"Thanks for the reply {f_name},\n\nSounds like you had a tough weekend.\n\nNot sure if you know — I'm a Flow Performance Coach. A bit different from the usual rider-coach. I work with riders in many championships on the mental side of racing — helping them access the Flow State, where performance becomes automatic, consistent, and confident under pressure.\n\nI've built a free post-race assessment tool that shows exactly where your gains are hiding — and how to unlock them in time for the next round.\n\nWant me to send it over?",
-                            
-                            "2. Reply (Great Work)": f"Thanks for the reply {f_name},\n\nThat’s Great work well done!\n\nNot sure if you know — I'm a Flow Performance Coach. A bit different from the usual rider-coach. I work with riders in many championships on the mental side of racing — helping them access the Flow State, where performance becomes automatic, consistent, and confident under pressure.\n\nI've built a free post-race assessment tool that shows exactly where your gains are hiding — and how to unlock them in time for the next round.\n\nWant me to send it over?",
-                            
-                            "3. Send Blueprint Link": f"Awesome. Here is the link to the assessment: [LINK]\n\nIt takes about 4 minutes. Once you're done, let me know and I can send over some specific feedback based on your score.",
-                            
-                            "4. Follow Up (Bump)": f"Hey {f_name}, just bumping this in case you missed it amid the post-race chaos?",
                             "Blank Hook": f"Hey {f_name}, "
                         }
                         
+                        # 2. Add Standard Deck from ui_components
+                        # (This is the "message deck" from earlier versions like 'Offer Free Training')
+                        from ui_components import REPLY_TEMPLATES
+                        
+                        # Merge dicts
+                        templates = custom_templates.copy()
+                        for k, v_raw in REPLY_TEMPLATES.items():
+                             # Format the standard templates with name
+                             # Some might not have {name}, but safe to try format or replace
+                             try:
+                                 v_formatted = v_raw.replace("{name}", f_name)
+                                 templates[k] = v_formatted
+                             except:
+                                 templates[k] = v_raw
+
                         template_options = list(templates.keys())
+                        # Sort to keep Cold Outreach at top if possible, or just standard sort
+                        # standard sort might put "1." at top which is good.
+                        
                         selected_tpl_name = st.selectbox("Select Template", template_options, key=f"tpl_{i}_{r['original_name']}")
                         
                         msg_val = templates[selected_tpl_name]
@@ -1127,8 +1139,11 @@ def render_admin(dashboard, overrides, sheet_errors, riders):
                     dashboard.reload_data()
                     st.session_state[file_key] = file_details
                     
+                    # Mark as Forced Local (survive reruns)
+                    st.session_state[f"force_local_{target_filename}"] = True
+                    
                     st.toast(f"✅ {label} Uploaded successfully!", icon="📂")
-                    st.success(f"**{label}** is now live and being used for today's data!")
+                    st.success(f"**{label}** is now live and being used for today's data! (Local Override Active)")
                     
                     return True
             return False
@@ -1405,66 +1420,65 @@ if st.sidebar.button("🔄 Force Reload / Clear Cache"):
     st.rerun()
 
 # 1. AUTO-SYNC GOOGLE SHEETS
+# --- CACHED DATA LOADER (Module Level) ---
+@st.cache_data(ttl=300) # Cache for 5 minutes
+def load_all_sheets_data_cached():
+     import concurrent.futures
+     
+     SHEET_CONFIG = {
+         "rider_db": "Rider Database.csv",
+         "strategy_apps": "Strategy Call Application.csv",
+         "blueprint_regs": "Podium Contenders Blueprint Registered.csv",
+         "seven_mistakes": "7 Biggest Mistakes Assessment.csv",
+         "day2_assessment": "Day 2 Self Assessment.csv",
+         "flow_profile": "Flow Profile.csv",
+         "sleep_test": "Sleep Test.csv",
+         "mindset_quiz": "Mindset Quiz.csv",
+         "race_weekend": "export (15).csv",
+         "season_review": "export (16).csv"
+     }
+     
+     sheet_secrets = st.secrets.get("sheets", {})
+     loaded_data = {}
+     missing_keys = []
+     load_errors = []
+     
+     # 1. Identify valid tasks
+     tasks = {}
+     for secret_key, internal_file in SHEET_CONFIG.items():
+         url = sheet_secrets.get(secret_key, "")
+         if url:
+             tasks[secret_key] = (url, internal_file)
+         else:
+             missing_keys.append(secret_key)
+     
+     # 2. Execute in Parallel
+     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+         future_to_key = {
+             executor.submit(load_google_sheet, url): (key, internal_file)
+             for key, (url, internal_file) in tasks.items()
+         }
+         
+         for future in concurrent.futures.as_completed(future_to_key):
+             key, internal_file = future_to_key[future]
+             try:
+                 df = future.result()
+                 if df is not None and not df.empty:
+                     loaded_data[internal_file] = df
+             except Exception as exc:
+                 load_errors.append(f"{key}: {exc}")
+                 print(f"Error loading {key}: {exc}")
+                 
+     return loaded_data, missing_keys, load_errors
+
 if HAS_GSHEETS:
     try:
         # Check for secrets
         if "connections" in st.secrets and "gsheets" in st.secrets["connections"]:
             
-            # Define cached loader to prevent API 429 Errors
-            @st.cache_data(ttl=300) # Cache for 5 minutes
-            def load_all_sheets_data():
-                 import concurrent.futures
-                 
-                 SHEET_CONFIG = {
-                     "rider_db": "Rider Database.csv",
-                     "strategy_apps": "Strategy Call Application.csv",
-                     "blueprint_regs": "Podium Contenders Blueprint Registered.csv",
-                     "seven_mistakes": "7 Biggest Mistakes Assessment.csv",
-                     "day2_assessment": "Day 2 Self Assessment.csv",
-                     "flow_profile": "Flow Profile.csv",
-                     "sleep_test": "Sleep Test.csv",
-                     "mindset_quiz": "Mindset Quiz.csv",
-                     "race_weekend": "export (15).csv",
-                     "season_review": "export (16).csv"
-                 }
-                 
-                 sheet_secrets = st.secrets.get("sheets", {})
-                 loaded_data = {}
-                 missing_keys = []
-                 load_errors = []
-                 
-                 # 1. Identify valid tasks
-                 tasks = {}
-                 for secret_key, internal_file in SHEET_CONFIG.items():
-                     url = sheet_secrets.get(secret_key, "")
-                     if url:
-                         tasks[secret_key] = (url, internal_file)
-                     else:
-                         missing_keys.append(secret_key)
-                 
-                 # 2. Execute in Parallel
-                 # Using 5 workers to avoid hitting Google API Rate Limits too hard
-                 # (Limit is usually user-based, but safe to throttle slightly)
-                 with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-                     future_to_key = {
-                         executor.submit(load_google_sheet, url): (key, internal_file)
-                         for key, (url, internal_file) in tasks.items()
-                     }
-                     
-                     for future in concurrent.futures.as_completed(future_to_key):
-                         key, internal_file = future_to_key[future]
-                         try:
-                             df = future.result()
-                             if df is not None and not df.empty:
-                                 loaded_data[internal_file] = df
-                         except Exception as exc:
-                             load_errors.append(f"{key}: {exc}")
-                             
-                 return loaded_data, missing_keys, load_errors
-            
             # CACHED CALL
             try:
-                 overrides, missing_config, sheet_errors = load_all_sheets_data()
+                 overrides, missing_config, sheet_errors = load_all_sheets_data_cached()
                  
                  # UI STATUS
                  if st.sidebar.checkbox("🔌 Connection Status", value=False): # Collapsed via checkbox to save rendering
@@ -1477,13 +1491,10 @@ if HAS_GSHEETS:
                           st.sidebar.error(f"⚠️ Connection Errors: {sheet_errors}")
 
                       for internal_file, df in overrides.items():
-                           # Find key name for display
-                           display_key = "Sheet"
-                           # Reverse lookup... inefficient but fine for small config
                            st.sidebar.caption(f"✅ {internal_file}: {len(df)} rows")
                            
                  if sheet_errors:
-                     st.toast(f"⚠️ Some Google Sheets failed to load (Rate Limit?). Using local data.", icon="⚠️")
+                     st.toast(f"⚠️ Some Google Sheets failed to load. Using local data.", icon="⚠️")
 
             except Exception as e:
                 st.error(f"GSheets Cache Error: {e}")
@@ -1493,7 +1504,6 @@ if HAS_GSHEETS:
             overrides = {}
             sheet_errors = ["No 'gsheets' connection in secrets.toml"]
     except Exception as e:
-        st.error(f"GSheets Config Error: {e}")
         overrides = {}
         sheet_errors = [str(e)]
 else:
@@ -1502,9 +1512,21 @@ else:
 
 # Load Logic
 try:
-    dashboard = load_dashboard_data(overrides=overrides)
+    # APPLY LOCAL OVERRIDES (If User Manually Uploaded)
+    cleaned_overrides = overrides.copy()
+    forced_files = []
+    
+    for filename in list(cleaned_overrides.keys()):
+        if st.session_state.get(f"force_local_{filename}"):
+            del cleaned_overrides[filename]
+            forced_files.append(filename)
+            
+    if forced_files:
+        st.toast(f"Using local files for: {len(forced_files)} inputs", icon="📂")
+
+    dashboard = load_dashboard_data(overrides=cleaned_overrides)
     riders = dashboard.riders
-    daily_metrics = dashboard.get_daily_metrics() 
+    daily_metrics = dashboard.get_daily_metrics()  
 except Exception as e:
     st.error(f"Error loading dashboard: {e}")
     st.stop()
