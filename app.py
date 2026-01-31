@@ -476,6 +476,8 @@ def render_dashboard(dashboard, daily_metrics, riders):
                 if r.current_stage in stage['val']
                 and is_in_timeframe(r, stage['date_attr'])
             ]
+            # SORT: Latest Activity First
+            stage_riders.sort(key=lambda x: getattr(x, stage['date_attr']) or datetime.min, reverse=True)
             
             # Create list of formatted strings
             items = []
@@ -544,6 +546,8 @@ def render_dashboard(dashboard, daily_metrics, riders):
                     if (r.current_stage in stage['val'] or r.current_stage.value in target_vals)
                     and is_in_timeframe(r, stage['date_attr'])
                 ]
+                # SORT: Latest Activity First
+                stage_riders.sort(key=lambda x: getattr(x, stage['date_attr']) or datetime.min, reverse=True)
                 
                 # Get riders for this stage (from instruction, but conflicts with existing filter)
                 # stage_riders = [r for r in dashboard.riders.values() if r.current_stage == stage] # This line from instruction would overwrite existing logic. Keeping original.
