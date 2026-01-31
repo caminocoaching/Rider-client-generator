@@ -2506,6 +2506,7 @@ class FunnelDashboard:
             # Update fields if provided (and not handled by lower level)
             # (DataLoader handles most, but ensuring manual fields are set)
             if notes: rider.notes = notes
+            if championship: rider.championship = championship
             if follow_up_date: rider.follow_up_date = follow_up_date
             
             # TRIGGER MIGRATION (Sync to Airtable + Delete from GSheet)

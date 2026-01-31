@@ -1151,8 +1151,8 @@ def render_admin(dashboard, overrides, sheet_errors, riders):
                         st.success(f"✅ Added {new_first} {new_last} to database!")
                         # Optionally set stage to Contact immediately
                         dashboard.update_rider_stage(new_email.strip(), FunnelStage.CONTACT)
-                        st.cache_resource.clear()
-                        # st.rerun() # Let user see success message
+                        # st.cache_resource.clear() # CAUSES SLOWNESS
+                        st.rerun() # Immediate UI update from memory
                     else:
                         st.error("Failed to add rider. Email might already exist.")
                 else:
