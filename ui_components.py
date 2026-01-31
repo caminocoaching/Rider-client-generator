@@ -180,12 +180,7 @@ def render_unified_card_content(rider, dashboard, key_suffix="", default_event_n
         st.caption("Copy for DM:")
         st.code(final_msg, language=None)
         
-        c_act1, c_act2 = st.columns(2)
-        with c_act1:
-            if st.button("🚀 Mark Messaged", key=f"uni_sent_{rider.email}_{key_suffix}", help="Moves stage to Messaged"):
-                 dashboard.update_rider_stage(rider.email, FunnelStage.MESSAGED)
-                 st.toast(f"Marked {rider.first_name} as Messaged!")
-                 st.rerun()
+
 
     # --- RIGHT COL: INFO & ACTIONS ---
     with uc2:
