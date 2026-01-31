@@ -1148,7 +1148,7 @@ def render_admin(dashboard, overrides, sheet_errors, riders):
                     )
                     
                     if success:
-                        st.success(f"✅ Added {new_first} {new_last} to database!")
+                        st.toast(f"✅ Added {new_first} {new_last} to database!", icon="🎉")
                         # Optionally set stage to Contact immediately
                         dashboard.update_rider_stage(new_email.strip(), FunnelStage.CONTACT)
                         # st.cache_resource.clear() # CAUSES SLOWNESS
