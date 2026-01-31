@@ -8,22 +8,34 @@ REPLY_TEMPLATES = {
     # --- COLD OUTREACH RESPONSES ---
     "Great Work (Reply)": """Thanks for the reply {name},
 That’s Great work well done!
-Not sure if you know — I’m a Flow Performance Coach. A bit different from the usual rider-coach.
-I work with riders in many championships on the mental side of racing — helping them access the Flow State, where performance becomes automatic, consistent, and confident under pressure.
-I’ve built a free post-race assessment tool that shows exactly where your gains are hiding — and how to unlock them in time for the next round.
+
+Not sure if you know, I’m a Flow Performance Coach. A bit different from the usual rider-coach.
+
+I work with riders in many championships on the mental side of racing, helping them access the Flow State where performance becomes automatic, consistent, and confident under pressure.
+
+I’ve built a free post-race assessment tool that shows exactly where your gains are hiding and how to unlock them in time for the next round.
+
 Want me to send it over?""",
 
     "Productive (Reply)": """Thanks for the reply {name},
-Sounds like you had a productive weekend
-Not sure if you know — I’m a Flow Performance Coach. A bit different from the usual rider-coach.
-I work with riders in many championships on the mental side of racing — helping them access the Flow State, where performance becomes automatic, consistent, and confident under pressure.
-I’ve built a free post-race assessment tool that shows exactly where your gains are hiding — and how to unlock them in time for the next round.
+Sounds like you had a productive weekend.
+
+Not sure if you know, I’m a Flow Performance Coach. A bit different from the usual rider-coach.
+
+I work with riders in many championships on the mental side of racing, helping them access the Flow State where performance becomes automatic, consistent, and confident under pressure.
+
+I’ve built a free post-race assessment tool that shows exactly where your gains are hiding and how to unlock them in time for the next round.
+
 Want me to send it over?""",
 
-    "Tough Weekend (Reply)": """Thanks for the reply {name}, it Sounds like you had a tough weekend
-Not sure if you know — I’m a Flow Performance Coach. A bit different from the usual rider-coach.
-I work with riders in many championships on the mental side of racing — helping them access the Flow State, where performance becomes automatic, consistent, and confident under pressure.
-I’ve built a free post-race assessment tool that shows exactly where your gains are hiding — and how to unlock them in time for the next round.
+    "Tough Weekend (Reply)": """Thanks for the reply {name}, it Sounds like you had a tough weekend.
+
+Not sure if you know, I’m a Flow Performance Coach. A bit different from the usual rider-coach.
+
+I work with riders in many championships on the mental side of racing, helping them access the Flow State where performance becomes automatic, consistent, and confident under pressure.
+
+I’ve built a free post-race assessment tool that shows exactly where your gains are hiding and how to unlock them in time for the next round.
+
 Want me to send it over?""",
 
     "Send Link (Yes)": """Superb, {name} Here is the link to The Post-Race Weekend Performance Score
@@ -109,8 +121,10 @@ def render_unified_card_content(rider, dashboard, key_suffix="", default_event_n
             context_text = st.text_area("Conversation Context", height=100, key=f"ctx_{rider.email}_{key_suffix}")
             
             if context_text and dashboard.smart_reply:
-                # Find match
-                match = dashboard.smart_reply.find_reply(context_text)
+                # OPTIMIZATION: Only run heavy search on click
+                if st.button("🔍 Analyze Context", key=f"btn_analyze_{rider.email}_{key_suffix}"):
+                    # Find match
+                    match = dashboard.smart_reply.find_reply(context_text)
                 if match:
                     confidence = int(match['confidence'] * 100)
                     is_winning = match.get('is_winning', False)
