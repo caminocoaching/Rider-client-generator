@@ -791,7 +791,9 @@ class DataLoader:
         self._load_xperiencify_csv()
         self._load_flow_profile_results()
         self._load_sleep_test()
+        self._load_sleep_test()
         self._load_mindset_quiz()
+        self._load_race_reviews()
         
         # Load manual updates LAST (overrides)
         self._load_manual_updates()
@@ -2241,6 +2243,40 @@ class DataLoader:
                         # "Flow Profile Type": rider.flow_profile_result
                     })
                 except Exception: pass
+
+    def _load_race_reviews(self):
+        """Load export (15).csv (Race Reviews)"""
+        filename = 'export (15).csv'
+        
+        for row in self._get_data_iter(filename):
+            email = row.get('email', '').strip()
+            if not email: continue
+            
+            rider = self._get_or_create_rider(
+                email,
+                row.get('first_name', ''),
+                row.get('last_name', '')
+            )
+            
+            # Parse Date
+            # Usually: 'scorecard_finished_at' or 'submit date (utc)'
+            date_val = row.get('scorecard_finished_at') or row.get('submit_date_utc') or row.get('Submit Date (UTC)')
+            submit_date = self._parse_date(date_val)
+            
+            if submit_date:
+                # Update if new
+                if not rider.race_weekend_review_date or submit_date > rider.race_weekend_review_date:
+                    rider.race_weekend_review_date = submit_date
+                    rider.race_weekend_review_status = "completed"
+                    
+                    # --- AIRTABLE SYNC ---
+                    if self.airtable:
+                        try:
+                            self.airtable.upsert_rider({
+                                "Email": email,
+                                "Date Race Review": submit_date.strftime('%Y-%m-%d')
+                            })
+                        except Exception: pass
 
 
 # =============================================================================
