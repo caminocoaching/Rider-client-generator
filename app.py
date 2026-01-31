@@ -53,14 +53,14 @@ def load_dashboard_data(overrides=None):
     return dashboard
 
 @st.cache_resource
-def load_smart_reply(rider_db=None):
+def load_smart_reply(_rider_db=None):
     if HAS_GSHEETS:
         # Check if we should use smart reply?
         pass # It's independent.
     
     if HAS_SMART_REPLY:
         # Pass the rider_db to identify winners
-        return SmartReplyManager(DATA_DIR, rider_db=rider_db)
+        return SmartReplyManager(DATA_DIR, rider_db=_rider_db)
     return None
 
 
@@ -385,7 +385,7 @@ def render_dashboard(dashboard, daily_metrics, riders):
 
     
     # --- LOAD SMART REPLY ---
-    smart_reply = load_smart_reply(dashboard.riders)
+    smart_reply = load_smart_reply(_rider_db=dashboard.riders)
     
     now = datetime.now()
     
