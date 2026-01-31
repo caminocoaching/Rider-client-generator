@@ -91,6 +91,7 @@ class FunnelStage(Enum):
     FOLLOW_UP = "Follow up"
     FLOW_PROFILE_COMPLETED = "Flow Profile Completed"
     MINDSET_QUIZ_COMPLETED = "Mindset Quiz Completed"
+    SLEEP_TEST_COMPLETED = "Sleep Test Completed"
     
     # Legacy / Compatibility Aliases
     OUTREACH = "Messaged"
@@ -2116,6 +2117,10 @@ class DataLoader:
                     rider.sleep_score = float(score)
             except ValueError:
                 pass
+            
+            # --- UPDATE STAGE ---
+            if rider.current_stage in [FunnelStage.CONTACT, FunnelStage.OUTREACH]:
+                rider.current_stage = FunnelStage.SLEEP_TEST_COMPLETED
             
             # --- AIRTABLE SYNC ---
             if self.airtable:
