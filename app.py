@@ -1136,9 +1136,16 @@ def render_admin(dashboard, overrides, sheet_errors, riders):
             new_notes = st.text_area("Initial Notes (Optional)")
             
             if st.form_submit_button("💾 Save to Database"):
-                if new_email and new_first:
+                if new_first:
+                    # Handle missing email
+                    final_email = new_email.strip()
+                    if not final_email:
+                        slug = f"{new_first} {new_last}".lower().strip().replace(' ', '_')
+                        slug = "".join([c for c in slug if c.isalnum() or c == '_'])
+                        final_email = f"no_email_{slug}"
+                    
                     success = dashboard.add_new_rider(
-                        new_email.strip(), 
+                        final_email, 
                         new_first.strip(), 
                         new_last.strip(), 
                         fb_url=new_fb.strip(), 
@@ -1150,13 +1157,13 @@ def render_admin(dashboard, overrides, sheet_errors, riders):
                     if success:
                         st.toast(f"✅ Added {new_first} {new_last} to database!", icon="🎉")
                         # Optionally set stage to Contact immediately
-                        dashboard.update_rider_stage(new_email.strip(), FunnelStage.CONTACT)
+                        dashboard.update_rider_stage(final_email, FunnelStage.CONTACT)
                         # st.cache_resource.clear() # CAUSES SLOWNESS
                         st.rerun() # Immediate UI update from memory
                     else:
-                        st.error("Failed to add rider. Email might already exist.")
+                        st.error("Failed to add rider. Name/Email might already exist.")
                 else:
-                    st.warning("First Name and Email are required.")
+                    st.warning("First Name is required.")
 
     st.markdown("---")
     
