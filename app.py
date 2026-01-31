@@ -1130,6 +1130,7 @@ def render_admin(dashboard, overrides, sheet_errors, riders):
             new_first = c1.text_input("First Name")
             new_last = c2.text_input("Last Name")
             new_email = st.text_input("Email")
+            new_champ = st.text_input("Championship (Optional)")
             new_fb = st.text_input("Facebook URL (Optional)")
             new_ig = st.text_input("Instagram URL (Optional)")
             new_notes = st.text_area("Initial Notes (Optional)")
@@ -1142,6 +1143,7 @@ def render_admin(dashboard, overrides, sheet_errors, riders):
                         new_last.strip(), 
                         fb_url=new_fb.strip(), 
                         ig_url=new_ig.strip(),
+                        championship=new_champ.strip(),
                         notes=new_notes.strip()
                     )
                     
