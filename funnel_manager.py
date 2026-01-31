@@ -89,6 +89,7 @@ class FunnelStage(Enum):
     CLIENT = "Client"
     NOT_A_FIT = "Not a good fit"
     FOLLOW_UP = "Follow up"
+    FLOW_PROFILE_COMPLETED = "Flow Profile Completed"
     
     # Legacy / Compatibility Aliases
     OUTREACH = "Messaged"
@@ -2201,6 +2202,11 @@ class DataLoader:
             # Ending -> flow_profile_url and result
             ending_url = row.get('Ending', '')
             rider.flow_profile_url = ending_url
+            
+            # --- UPDATE STAGE ---
+            # If they are just a contact, move them to Flow Profile Completed so they show on dashboard
+            if rider.current_stage in [FunnelStage.CONTACT, FunnelStage.OUTREACH]:
+                rider.current_stage = FunnelStage.FLOW_PROFILE_COMPLETED
             
             # Derive result from URL if possible, or use a default if not clear
             # The prompt implies the result might be "Go Getter" or "Deep Thinker"
