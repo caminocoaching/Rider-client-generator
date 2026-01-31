@@ -430,9 +430,9 @@ def render_dashboard(dashboard, daily_metrics, riders):
 
         {"label": "Link Sent", "val": [FunnelStage.LINK_SENT, FunnelStage.BLUEPRINT_LINK_SENT], "date_attr": 'outreach_date'}, # or create link_sent_date if exists, fallback to outreach
         
-        {"label": "Flow Profile", "val": [FunnelStage.FLOW_PROFILE_COMPLETED], "date_attr": 'flow_profile_date'},
-        {"label": "Mindset Quiz", "val": [FunnelStage.MINDSET_QUIZ_COMPLETED], "date_attr": 'mindset_quiz_date'},
         {"label": "Sleep Test", "val": [FunnelStage.SLEEP_TEST_COMPLETED], "date_attr": 'sleep_test_date'},
+        {"label": "Mindset Quiz", "val": [FunnelStage.MINDSET_QUIZ_COMPLETED], "date_attr": 'mindset_quiz_date'},
+        {"label": "Flow Profile", "val": [FunnelStage.FLOW_PROFILE_COMPLETED], "date_attr": 'flow_profile_date'},
         {"label": "Registered", "val": [FunnelStage.BLUEPRINT_STARTED, FunnelStage.REGISTERED], "date_attr": 'registered_date'},
         {"label": "Day 1", "val": [FunnelStage.DAY1_COMPLETE], "date_attr": 'day1_complete_date'},
         {"label": "Day 2", "val": [FunnelStage.DAY2_COMPLETE], "date_attr": 'day2_complete_date'},
