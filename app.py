@@ -1121,6 +1121,43 @@ def render_database_view(dashboard):
 def render_admin(dashboard, overrides, sheet_errors, riders):
     st.subheader("📥 Daily Inputs & Manual Uploads")
 
+    # MANUAL ADD RIDER
+    with st.expander("👤 manually Add New Rider", expanded=False):
+        st.write("Add a single rider who didn't come from an automated source.")
+        
+        with st.form("manual_add_rider_form"):
+            c1, c2 = st.columns(2)
+            new_first = c1.text_input("First Name")
+            new_last = c2.text_input("Last Name")
+            new_email = st.text_input("Email")
+            new_fb = st.text_input("Facebook URL (Optional)")
+            new_ig = st.text_input("Instagram URL (Optional)")
+            new_notes = st.text_area("Initial Notes (Optional)")
+            
+            if st.form_submit_button("💾 Save to Database"):
+                if new_email and new_first:
+                    success = dashboard.add_new_rider(
+                        new_email.strip(), 
+                        new_first.strip(), 
+                        new_last.strip(), 
+                        fb_url=new_fb.strip(), 
+                        ig_url=new_ig.strip(),
+                        notes=new_notes.strip()
+                    )
+                    
+                    if success:
+                        st.success(f"✅ Added {new_first} {new_last} to database!")
+                        # Optionally set stage to Contact immediately
+                        dashboard.update_rider_stage(new_email.strip(), FunnelStage.CONTACT)
+                        st.cache_resource.clear()
+                        # st.rerun() # Let user see success message
+                    else:
+                        st.error("Failed to add rider. Email might already exist.")
+                else:
+                    st.warning("First Name and Email are required.")
+
+    st.markdown("---")
+    
     # FILE UPLOADS
     with st.expander("📂 File Uploads (Manual)", expanded=True):
         st.info("Upload new CSVs here for non-synced data.")
