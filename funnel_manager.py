@@ -79,6 +79,7 @@ class OutreachChannel(Enum):
 class FunnelStage(Enum):
     CONTACT = "Contact"
     MESSAGED = "Messaged"
+    REPLIED = "Replied"
     RACE_WEEKEND = "Race Weekend"
     LINK_SENT = "Link Sent"
     BLUEPRINT_STARTED = "Podium Contenders Blueprint Started"
@@ -2487,6 +2488,18 @@ class FunnelDashboard:
                 
                 # TRIGGER MIGRATION
                 self.migrate_rider_to_airtable(email)
+                
+                # --- AUTO-INCREMENT DAILY STATS ---
+                # Ensure the dashboard metrics reflect this action immediately
+                if new_stage == FunnelStage.MESSAGED:
+                    # Guess channel based on URLs (or default to FB if both or neither, usually FB is primary)
+                    if rider.instagram_url and not rider.facebook_url:
+                        self.daily_stats.increment_ig()
+                    else:
+                        self.daily_stats.increment_fb()
+                        
+                elif new_stage == FunnelStage.LINK_SENT:
+                    self.daily_stats.increment_link()
         
         # Recalculate conversion rates as data changed
         self._calculate_conversion_rates()
