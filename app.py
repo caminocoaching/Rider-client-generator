@@ -875,10 +875,6 @@ def render_race_outreach(dashboard):
                     with rc1:
                         st.write("#### 📝 Outreach Draft")
                         
-                    # LEFT: Draft Message (Standard)
-                    with rc1:
-                        st.write("#### 📝 Outreach Draft")
-                        
                         # --- TEMPLATE DEFINITIONS (Restored & Merged) ---
                         f_name = r['original_name'].split(' ')[0]
                         
