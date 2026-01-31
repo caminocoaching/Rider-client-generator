@@ -2528,6 +2528,11 @@ class FunnelDashboard:
                 # This ensures they show up in "Current Month" dashboard.
                 if new_stage in [FunnelStage.MESSAGED, FunnelStage.OUTREACH]:
                     rider.outreach_date = datetime.now()
+                
+                # Ensure outreach_date is set for subsequent stages if skipped/missing
+                elif new_stage in [FunnelStage.REPLIED, FunnelStage.LINK_SENT, FunnelStage.BLUEPRINT_LINK_SENT]:
+                    if not rider.outreach_date:
+                        rider.outreach_date = datetime.now()
                     
                 elif new_stage == FunnelStage.STRATEGY_CALL_BOOKED and not rider.strategy_call_booked_date:
                     rider.strategy_call_booked_date = datetime.now()
