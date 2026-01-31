@@ -279,10 +279,13 @@ def render_unified_card_content(rider, dashboard, key_suffix="", default_event_n
                 st.rerun()
 
         # 3. Link Sent
-        if c_step3.button("🔗 Link Sent", key=f"q_lnk_{rider.email}_{key_suffix}", use_container_width=True):
+        if c_step3.button("🔗 Link Sent", key=f"q_lnk_btn_{rider.email}_{key_suffix}", use_container_width=True):
+            try:
                 dashboard.update_rider_stage(rider.email, FunnelStage.LINK_SENT)
-                st.toast(f"Marked {rider.first_name} as Link Sent!")
+                st.toast(f"✅ Status updated: Link Sent!", icon="🔗")
                 st.rerun()
+            except Exception as e:
+                st.error(f"Error updating stage: {e}")
             
         st.divider()
         
