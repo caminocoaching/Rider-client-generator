@@ -26,9 +26,12 @@ I work with riders in many championships on the mental side of racing — helpin
 I’ve built a free post-race assessment tool that shows exactly where your gains are hiding — and how to unlock them in time for the next round.
 Want me to send it over?""",
 
-    "Send Link (Yes)": """Great. Here is the link: https://improve-rider.scoreapp.com/
-No pressure to do anything with it right away, but it usually reveals some interesting gaps.
-Let me know what your score is once you've done it!""",
+    "Send Link (Yes)": """Superb, {name} Here is the link to The Post-Race Weekend Performance Score
+https://improve-rider.scoreapp.com
+
+This short review zeroes in on where you’re losing lap time, where any gaps are showing up and how to fill them 🚀
+
+At the bottom of the results page is some free training on how to fill those gaps 👍🏻""",
 
     # --- PIPELINE FOLLOW-UPS ---
     "Follow-Up (Review 2 Days) V1": """Hey {name}
@@ -92,11 +95,49 @@ def render_unified_card_content(rider, dashboard, key_suffix="", default_event_n
             options=template_options,
             key=f"uni_tpl_{rider.email}_{key_suffix}"
         )
+
+        # --- AI REPLY GENERATOR (Paste Context) ---
+        # Only show if in Draft mode or explicitly requested? 
+        # User asked for it in the menu, but maybe better as an expander or always visible?
+        # "a reply generator in the drop down menu" -> implies it's an option?
+        # Let's make it an expander for now to save space, or part of the flow.
         
+        smart_reply_result = None
+        
+        with st.expander("🧠 Generate Reply from Context", expanded=False):
+            st.caption("Paste the conversation history or the prospect's last message.")
+            context_text = st.text_area("Conversation Context", height=100, key=f"ctx_{rider.email}_{key_suffix}")
+            
+            if context_text and dashboard.smart_reply:
+                # Find match
+                match = dashboard.smart_reply.find_reply(context_text)
+                if match:
+                    confidence = int(match['confidence'] * 100)
+                    is_winning = match.get('is_winning', False)
+                    
+                    if is_winning:
+                        st.success(f"🏆 **Winning Reply Found!** ({confidence}% match)")
+                        st.caption(f"Used successfully by: {match['sender']}")
+                    else:
+                        st.info(f"✅ Similar Reply Found ({confidence}%)")
+                        
+                    st.markdown("**Suggestion:**")
+                    st.code(match['reply'], language=None)
+                    
+                    if st.button("Use This Reply", key=f"use_smart_{rider.email}_{key_suffix}"):
+                        smart_reply_result = match['reply']
+                else:
+                    st.warning("No similar conversations found.")
+
         # 2. MESSAGE GENERATION
         draft_msg = ""
         
-        if tmpl_key == "✨ Auto-Generate (Race Context)" and default_event_name:
+        if smart_reply_result:
+             draft_msg = smart_reply_result
+             # Auto-switch to Draft so it doesn't get overwritten by template logic immediately
+             # (Requires session state handle, simpliest is to let them edit it)
+             
+        elif tmpl_key == "✨ Auto-Generate (Race Context)" and default_event_name:
              # Generate using race logic
              mock_raw = {'original_name': rider.full_name, 'match_status': 'match_found', 'match': rider}
              draft_msg = dashboard.generate_outreach_message(mock_raw, default_event_name)
@@ -114,7 +155,17 @@ def render_unified_card_content(rider, dashboard, key_suffix="", default_event_n
             st.session_state[prev_tpl_key] = "(Draft / Custom)"
             
         # Detect Change
-        if tmpl_key != st.session_state[prev_tpl_key]:
+        # Logic: If smart reply was clicked, we want to force update the text area.
+        # Streamlit text_area value is updated if we change the key or use a new value.
+        # But we are using session state. 
+        
+        if smart_reply_result:
+             st.session_state[msg_key] = smart_reply_result
+             # Reset template to Custom so it persists
+             # (We can't easily change the selectbox value programmatically without a rerun and state sync)
+             # But changing the text area content is enough.
+        
+        elif tmpl_key != st.session_state[prev_tpl_key]:
              if tmpl_key != "(Draft / Custom)":
                  st.session_state[msg_key] = draft_msg
              st.session_state[prev_tpl_key] = tmpl_key
@@ -141,7 +192,8 @@ def render_unified_card_content(rider, dashboard, key_suffix="", default_event_n
         st.write("#### 👤 Contact Actions")
         
         # Info Block
-        st.markdown(f"**Stage:** `{rider.current_stage.value}`")
+        curr_stage_display = rider.current_stage.value if hasattr(rider.current_stage, 'value') else str(rider.current_stage)
+        st.markdown(f"**Stage:** `{curr_stage_display}`")
         if rider.phone: st.markdown(f"**Phone:** `{rider.phone}`")
         
         # Socials
@@ -195,11 +247,33 @@ def render_unified_card_content(rider, dashboard, key_suffix="", default_event_n
             st.markdown(f"[🔎 Search Google]({search_url})")
             
         # STAGE ACTIONS (Link Sent)
-        if rider.current_stage.value != 'Link Sent' and rider.current_stage.value != 'Podium Contenders Blueprint Started':
-             if st.button("🔗 Mark Link Sent", key=f"mark_link_{rider.email}_{key_suffix}", help="Move to 'Link Sent' stage"):
-                 dashboard.update_rider_stage(rider.email, FunnelStage.LINK_SENT)
-                 st.toast(f"Updated {rider.first_name} to Link Sent!")
-                 st.rerun()
+        # Replaced with comprehensive "Next Step" buttons below
+            
+        st.divider()
+        
+        # --- QUICK STAGE TRANSITIONS ---
+        # "Underneath the DM buttons"
+        st.markdown("#### ⏩ Pipeline Actions")
+        
+        c_step1, c_step2, c_step3 = st.columns(3)
+        
+        # 1. Messaged
+        if c_step1.button("🚀 Messaged", key=f"q_msg_{rider.email}_{key_suffix}", use_container_width=True):
+            dashboard.update_rider_stage(rider.email, FunnelStage.MESSAGED)
+            st.toast(f"Marked {rider.first_name} as Messaged!")
+            st.rerun()
+            
+        # 2. Replied
+        if c_step2.button("↩️ Replied", key=f"q_rep_{rider.email}_{key_suffix}", use_container_width=True):
+                dashboard.update_rider_stage(rider.email, FunnelStage.REPLIED)
+                st.toast(f"Marked {rider.first_name} as Replied!")
+                st.rerun()
+
+        # 3. Link Sent
+        if c_step3.button("🔗 Link Sent", key=f"q_lnk_{rider.email}_{key_suffix}", use_container_width=True):
+                dashboard.update_rider_stage(rider.email, FunnelStage.LINK_SENT)
+                st.toast(f"Marked {rider.first_name} as Link Sent!")
+                st.rerun()
             
         st.divider()
         
@@ -247,6 +321,25 @@ def render_unified_card_content(rider, dashboard, key_suffix="", default_event_n
                 u_ig = st.text_input("Instagram URL", value=rider.instagram_url or "", key=f"uni_ig_{rider.email}_{key_suffix}")
                 u_champ = st.text_input("Championship", value=rider.championship or "", key=f"uni_champ_{rider.email}_{key_suffix}")
                 
+                # STAGE DROPDOWN (Allow Manual Move)
+                stage_options = [s.value for s in FunnelStage]
+                
+                # Robustly get current stage string
+                curr_stage_val = rider.current_stage.value if hasattr(rider.current_stage, 'value') else str(rider.current_stage)
+                
+                # Match to options or default
+                try:
+                    default_idx = stage_options.index(curr_stage_val)
+                except ValueError:
+                    default_idx = 0 # Default to first if unknown
+                
+                u_stage = st.selectbox(
+                    "Current Stage", 
+                    options=stage_options, 
+                    index=default_idx,
+                    key=f"uni_stage_{rider.email}_{key_suffix}"
+                )
+
                  # Follow Up Date
                 default_date = rider.follow_up_date.date() if rider.follow_up_date else None
                 u_follow = st.date_input("📅 Next Follow-Up", value=default_date, key=f"uni_fu_{rider.email}_{key_suffix}")
@@ -268,6 +361,17 @@ def render_unified_card_content(rider, dashboard, key_suffix="", default_event_n
                     if not final_email:
                         final_email = rider.email
                     
+                    # 1. Update Stage if changed
+                    # Get current stage string safely
+                    curr_stage_val = rider.current_stage.value if hasattr(rider.current_stage, 'value') else str(rider.current_stage)
+                    
+                    if u_stage != curr_stage_val:
+                        new_enum = next((s for s in FunnelStage if s.value == u_stage), None)
+                        if new_enum:
+                            dashboard.update_rider_stage(rider.email, new_enum)
+                            st.toast(f"Moved to {u_stage}!")
+
+                    # 2. Update Details
                     dashboard.add_new_rider(
                         final_email, u_first, u_last, u_fb, ig_url=u_ig, championship=u_champ, notes=u_notes, follow_up_date=ts_follow
                     )
