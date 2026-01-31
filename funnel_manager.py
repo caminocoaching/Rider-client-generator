@@ -90,6 +90,7 @@ class FunnelStage(Enum):
     NOT_A_FIT = "Not a good fit"
     FOLLOW_UP = "Follow up"
     FLOW_PROFILE_COMPLETED = "Flow Profile Completed"
+    MINDSET_QUIZ_COMPLETED = "Mindset Quiz Completed"
     
     # Legacy / Compatibility Aliases
     OUTREACH = "Messaged"
@@ -2158,6 +2159,10 @@ class DataLoader:
             outcome = row.get('Outcome', '') or row.get('Your Mindset', '')
             if outcome:
                 rider.mindset_result = outcome.strip()
+
+            # --- UPDATE STAGE ---
+            if rider.current_stage in [FunnelStage.CONTACT, FunnelStage.OUTREACH]:
+                rider.current_stage = FunnelStage.MINDSET_QUIZ_COMPLETED
 
             # --- AIRTABLE SYNC ---
             if self.airtable:
