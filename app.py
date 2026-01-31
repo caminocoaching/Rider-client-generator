@@ -596,6 +596,8 @@ def render_dashboard(dashboard, daily_metrics, riders):
                      d_val = getattr(r, stage['date_attr'])
                      if d_val: 
                          date_str = d_val.strftime('%d %b')
+                     elif stage['label'] in ["Messaged", "Replied", "Link Sent"]:
+                         date_str = "No Date"
                      elif stage['val'][0] == FunnelStage.CONTACT:
                          # Show "New" or similar if no date for Contact stage
                          pass
